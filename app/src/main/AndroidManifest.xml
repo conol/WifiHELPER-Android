@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="jp.co.conol.wifihelper_android">
 
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -18,18 +16,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- wifiのオンオフを検知 -->
-        <receiver android:name=".receiver.WifiStateWatcher">
-            <intent-filter>
-                <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
-            </intent-filter>
-        </receiver>
-
-        <!-- wifi有効期限切れのアラームを検知 -->
-        <receiver
-            android:name=".receiver.WifiExpiredBroadcastReceiver"
-            android:process=":remote" />
 
     </application>
 

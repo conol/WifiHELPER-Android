@@ -2,7 +2,11 @@ package jp.co.conol.wifihelper_admin_lib.wifi_connect;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
@@ -12,8 +16,13 @@ import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import java.util.Calendar;
 import java.util.List;
 
+import jp.co.conol.wifihelper_admin_lib.Util;
+import jp.co.conol.wifihelper_admin_lib.wifi_connect.receiver.WifiExpiredBroadcastReceiver;
+
+import static android.content.Context.ALARM_SERVICE;
 import static android.content.Context.WIFI_SERVICE;
 
 /**
@@ -30,12 +39,12 @@ public class WifiConnect {
     public static final int WPA_WPA2PSK = 2;  // 暗号化方式がWPA/WPA2-PSK
 
     // コンストラクタ（パーミッションのリクエストコード任意設定なし：デフォルトで0）
-    public WifiConnect(Context context, String ssid, String password, int encMethod) {
-        this(context, ssid, password, encMethod, 0);
+    public WifiConnect(Context context, String ssid, String password, int encMethod, Calendar calendarExpire) {
+        this(context, ssid, password, encMethod, calendarExpire, 0);
     }
 
     // コンストラクタ（パーミッションのリクエストコード任意設定あり）
-    public WifiConnect(Context context, String ssid, String password, int encMethod, int accessCoarseLocationRequestCode) {
+    public WifiConnect(Context context, String ssid, String password, int encMethod, Calendar calendarExpire, int accessCoarseLocationRequestCode) {
         this.mSsid = ssid;
 
         // wifi設定用インスタンス
@@ -84,6 +93,32 @@ public class WifiConnect {
                     Log.d("onFailure: ", "Wifiの暗号化方式設定が正しくありません");
                     break;
             }
+        }
+
+        // wifiの有効期限を設定
+        SharedPreferences pref = context.getSharedPreferences("wifiHelper", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        if(calendarExpire != null) {
+
+            // 有効期限の日時とSSIDを保存
+            editor.putLong("expireDateTime", Util.Transform.calendarTodate(calendarExpire).getTime());
+            editor.putString("ssid", mSsid);
+            editor.apply();
+
+            // アラームを受信するレシーバーを作成
+            Intent alarmIntent = new Intent(context.getApplicationContext(), WifiExpiredBroadcastReceiver.class);
+            alarmIntent.putExtra("ssid", mSsid);
+            PendingIntent pending = PendingIntent.getBroadcast(
+                    context.getApplicationContext(),
+                    0,
+                    alarmIntent,
+                    PendingIntent.FLAG_CANCEL_CURRENT);
+
+            // アラームをセットする
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendarExpire.getTimeInMillis(), pending);
+        } else {
+            editor.clear().apply();
         }
     }
 

@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_android.receiver;
+package jp.co.conol.wifihelper_admin_lib.wifi_connect.receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
