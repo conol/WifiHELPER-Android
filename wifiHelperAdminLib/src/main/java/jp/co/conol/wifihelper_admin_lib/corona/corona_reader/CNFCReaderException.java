@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib.corona_reader;
+package jp.co.conol.wifihelper_admin_lib.corona.corona_reader;
 
 public class CNFCReaderException extends Exception {
 

@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib.wifi_connect;
+package jp.co.conol.wifihelper_admin_lib.wifi_connector;
 
 import android.Manifest;
 import android.app.Activity;
@@ -20,7 +20,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import jp.co.conol.wifihelper_admin_lib.Util;
-import jp.co.conol.wifihelper_admin_lib.wifi_connect.receiver.WifiExpiredBroadcastReceiver;
+import jp.co.conol.wifihelper_admin_lib.wifi_connector.receiver.WifiExpiredBroadcastReceiver;
 
 import static android.content.Context.ALARM_SERVICE;
 import static android.content.Context.WIFI_SERVICE;
@@ -29,7 +29,7 @@ import static android.content.Context.WIFI_SERVICE;
  * Created by Masafumi_Ito on 2017/10/04.
  */
 
-public class WifiConnect {
+public class WifiConnector {
 
     private WifiManager mWifiManager;
     private int mNetworkId = -1;
@@ -39,12 +39,12 @@ public class WifiConnect {
     public static final int FREE        = 3;  // 暗号化なし
 
     // コンストラクタ（パーミッションのリクエストコード任意設定なし：デフォルトで0）
-    public WifiConnect(Context context, String ssid, String password, int encMethod, Calendar calendarExpire) {
+    public WifiConnector(Context context, String ssid, String password, int encMethod, Calendar calendarExpire) {
         this(context, ssid, password, encMethod, calendarExpire, 0);
     }
 
     // コンストラクタ（パーミッションのリクエストコード任意設定あり）
-    public WifiConnect(Context context, String ssid, String password, int encMethod, Calendar calendarExpire, int accessCoarseLocationRequestCode) {
+    public WifiConnector(Context context, String ssid, String password, int encMethod, Calendar calendarExpire, int accessCoarseLocationRequestCode) {
         this.mSsid = ssid;
 
         // wifi設定用インスタンス
@@ -254,7 +254,7 @@ public class WifiConnect {
 
     // 手動で設定したWifiは削除不可能（Android 6.0 以降）
     @SuppressWarnings("deprecation")
-    public static boolean removeWifiSetting(Context context, String ssid) {
+    public static boolean deleteAccessPoint(Context context, String ssid) {
         WifiManager wifiManager = (WifiManager)context.getApplicationContext().getSystemService(WIFI_SERVICE);
 
         List<WifiConfiguration> configurations = wifiManager.getConfiguredNetworks();

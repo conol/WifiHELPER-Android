@@ -1,6 +1,8 @@
 package jp.co.conol.wifihelper_android;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,21 +18,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 
-import jp.co.conol.wifihelper_admin_lib.corona_reader.CNFCReader;
-import jp.co.conol.wifihelper_admin_lib.corona_reader.CNFCReaderException;
-import jp.co.conol.wifihelper_admin_lib.corona_reader.CNFCReaderTag;
-import jp.co.conol.wifihelper_admin_lib.corona_reader.NFCToReadNotAvailableException;
-import jp.co.conol.wifihelper_admin_lib.corona_writer.CNFCDetector;
-import jp.co.conol.wifihelper_admin_lib.corona_writer.CNFCTag;
-import jp.co.conol.wifihelper_admin_lib.corona_writer.NFCToWriteNotAvailableException;
-import jp.co.conol.wifihelper_admin_lib.wifi_connect.WifiConnect;
+import jp.co.conol.wifihelper_admin_lib.corona.CNFC;
+import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
+import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
+import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCTag;
+import jp.co.conol.wifihelper_admin_lib.corona.NFCNotAvailableException;
+import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
 
 public class MainActivity extends AppCompatActivity {
 
-    private CNFCDetector mCnfcDetector;
-    private CNFCReader mCnfcReader;
+    private CNFC mCnfc;
     private boolean isWriting = false;
     private boolean isConnecting = false;
     private EditText mSsidText;
@@ -50,10 +49,10 @@ public class MainActivity extends AppCompatActivity {
         mWriteButton   = (Button) findViewById(R.id.writeButton);
         mConnectButton = (Button) findViewById(R.id.connectButton);
 
-        String ssid = "conolAir";
-        String pass = "RaePh2oh";
-//        String ssid = "pr500m-98b038-1";
-//        String pass = "21425a9fb852b";
+//        String ssid = "conolAir";
+//        String pass = "RaePh2oh";
+        String ssid = "pr500m-98b038-1";
+        String pass = "21425a9fb852b";
 
         // EditTextに文字セット
         mSsidText.setText(ssid);
@@ -61,29 +60,16 @@ public class MainActivity extends AppCompatActivity {
         mExpireText.setText("10");
 
         try {
-            mCnfcDetector = new CNFCDetector(this);
-            mCnfcReader = new CNFCReader(this);
-        } catch (NFCToWriteNotAvailableException e) {
-            Log.d("CNFCWriter", e.toString());
-            finish();
-        } catch (NFCToReadNotAvailableException e) {
-            Log.d("CNFCReader", e.toString());
+            mCnfc = new CNFC(this);
+        } catch (NFCNotAvailableException e) {
+            Log.d("CNFC", e.toString());
             finish();
         }
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mCnfcDetector.enableForegroundDispatch(this);
-        mCnfcReader.enableForegroundDispatch(this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mCnfcDetector.disableForegroundDispatch(this);
-        mCnfcReader.disableForegroundDispatch(this);
+        if(!mCnfc.isEnable()) {
+            Toast.makeText(getApplicationContext(), "WifiHelperを利用するにはNFCをオンにしてください", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
+        }
     }
 
     @Override
@@ -94,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
             String ssid = String.valueOf(mSsidText.getText());
             String pass = String.valueOf(mPasswordText.getText());
             int expireDate = Integer.parseInt(mExpireText.getText().toString());
-            CNFCTag tag = mCnfcDetector.getTagFromIntent(intent);
+            CNFCTag tag = mCnfc.getWriteTagFromIntent(intent);
 
             if (tag != null) {
 
@@ -126,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
             Wifi wifi = null;
 
             try {
-                tag = mCnfcReader.getTagFromIntent(intent);
+                tag = mCnfc.getReadTagFromIntent(intent);
             } catch (CNFCReaderException e) {
                 Log.d("CNFCReader", e.toString());
                 return;
@@ -143,32 +129,61 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+            final Wifi readWifi = wifi;
+
             // 接続期限日時のインスタンスを作成
-            Calendar calendarExpire;
+            final Calendar calendarExpire  = Calendar.getInstance();
 
             // 接続期限日時の算出
-            calendarExpire = Calendar.getInstance();
             calendarExpire.setTime(new Date(System.currentTimeMillis()));
             calendarExpire.add(Calendar.DATE, wifi.getDays());
 
-            // Wifiをオン
-            if(!WifiConnect.isEnable(getApplicationContext()))
-                WifiConnect.setEnable(getApplicationContext(), true);
+            if(!WifiConnector.isEnable(getApplicationContext())) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Wi-Fi設定")
+                        .setMessage("Wi-Fiがオフになっています\nWi-Fiをオンにしてもよろしいですか？")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
 
-            // Wifi設定
-            WifiConnect wifiConnect = new WifiConnect(
-                    this,
-                    wifi.getSsid(),
-                    wifi.getPass(),
-                    WifiConnect.WPA_WPA2PSK,
-                    calendarExpire
-            );
+                                // wifiをオンにする
+                                WifiConnector.setEnable(getApplicationContext(), true);
 
-            // Wifi接続
-            wifiConnect.tryConnect();
+                                // Wifi設定
+                                WifiConnector wifiConnector = new WifiConnector(
+                                        MainActivity.this,
+                                        readWifi.getSsid(),
+                                        readWifi.getPass(),
+                                        WifiConnector.WPA_WPA2PSK,
+                                        calendarExpire
+                                );
 
-            mConnectButton.setText("CONNECT");
-            isConnecting = false;
+                                // Wifi接続
+                                wifiConnector.tryConnect();
+
+                                mConnectButton.setText("CONNECT");
+                                isConnecting = false;
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            } else {
+
+                // Wifi設定
+                WifiConnector wifiConnector = new WifiConnector(
+                        MainActivity.this,
+                        wifi.getSsid(),
+                        wifi.getPass(),
+                        WifiConnector.WPA_WPA2PSK,
+                        calendarExpire
+                );
+
+                // Wifi接続
+                wifiConnector.tryConnect();
+
+                mConnectButton.setText("CONNECT");
+                isConnecting = false;
+            }
         }
     }
 
