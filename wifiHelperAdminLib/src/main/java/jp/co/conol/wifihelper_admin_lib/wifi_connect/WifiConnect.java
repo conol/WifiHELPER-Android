@@ -34,9 +34,9 @@ public class WifiConnect {
     private WifiManager mWifiManager;
     private int mNetworkId = -1;
     private String mSsid;
-    public static final int FREE        = 0;  // 暗号化なし
-    public static final int WEP         = 1;  // 暗号化方式がWEP
-    public static final int WPA_WPA2PSK = 2;  // 暗号化方式がWPA/WPA2-PSK
+    public static final int WPA_WPA2PSK = 1;  // 暗号化方式がWPA/WPA2-PSK
+    public static final int WEP         = 2;  // 暗号化方式がWEP
+    public static final int FREE        = 3;  // 暗号化なし
 
     // コンストラクタ（パーミッションのリクエストコード任意設定なし：デフォルトで0）
     public WifiConnect(Context context, String ssid, String password, int encMethod, Calendar calendarExpire) {

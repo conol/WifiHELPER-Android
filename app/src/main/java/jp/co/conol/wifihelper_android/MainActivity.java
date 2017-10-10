@@ -1,10 +1,6 @@
 package jp.co.conol.wifihelper_android;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,26 +9,30 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 
-import jp.co.conol.wifihelper_admin_lib.Util;
 import jp.co.conol.wifihelper_admin_lib.corona_reader.CNFCReader;
 import jp.co.conol.wifihelper_admin_lib.corona_reader.CNFCReaderException;
 import jp.co.conol.wifihelper_admin_lib.corona_reader.CNFCReaderTag;
+import jp.co.conol.wifihelper_admin_lib.corona_reader.NFCToReadNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.corona_writer.CNFCDetector;
 import jp.co.conol.wifihelper_admin_lib.corona_writer.CNFCTag;
+import jp.co.conol.wifihelper_admin_lib.corona_writer.NFCToWriteNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.wifi_connect.WifiConnect;
-import jp.co.conol.wifihelper_admin_lib.wifi_connect.receiver.WifiExpiredBroadcastReceiver;
+import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
+import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
 
 public class MainActivity extends AppCompatActivity {
 
     private CNFCDetector mCnfcDetector;
     private CNFCReader mCnfcReader;
-    private boolean isWriting;
-    private boolean isConnectiong;
+    private boolean isWriting = false;
+    private boolean isConnecting = false;
     private EditText mSsidText;
     private EditText mPasswordText;
     private EditText mExpireText;
@@ -50,10 +50,10 @@ public class MainActivity extends AppCompatActivity {
         mWriteButton   = (Button) findViewById(R.id.writeButton);
         mConnectButton = (Button) findViewById(R.id.connectButton);
 
-//        String ssid = "conolAir";
-//        String pass = "RaePh2oh";
-        String ssid = "pr500m-98b038-1";
-        String pass = "21425a9fb852b";
+        String ssid = "conolAir";
+        String pass = "RaePh2oh";
+//        String ssid = "pr500m-98b038-1";
+//        String pass = "21425a9fb852b";
 
         // EditTextに文字セット
         mSsidText.setText(ssid);
@@ -63,28 +63,43 @@ public class MainActivity extends AppCompatActivity {
         try {
             mCnfcDetector = new CNFCDetector(this);
             mCnfcReader = new CNFCReader(this);
-        } catch (jp.co.conol.wifihelper_admin_lib.corona_writer.NFCNotAvailableException e) {
-            Toast.makeText(this, "NFC is not available (writer)", Toast.LENGTH_LONG).show();
+        } catch (NFCToWriteNotAvailableException e) {
+            Log.d("CNFCWriter", e.toString());
             finish();
-            return;
-        } catch (jp.co.conol.wifihelper_admin_lib.corona_reader.NFCNotAvailableException e) {
-            Toast.makeText(this, "NFC is not available (reader)", Toast.LENGTH_LONG).show();
+        } catch (NFCToReadNotAvailableException e) {
+            Log.d("CNFCReader", e.toString());
             finish();
-            return;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mCnfcDetector.enableForegroundDispatch(this);
+        mCnfcReader.enableForegroundDispatch(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mCnfcDetector.disableForegroundDispatch(this);
+        mCnfcReader.disableForegroundDispatch(this);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
 
-        String ssid = String.valueOf(mSsidText.getText());
-        String pass = String.valueOf(mPasswordText.getText());
-
         // 書き込み
         if(isWriting) {
+            String ssid = String.valueOf(mSsidText.getText());
+            String pass = String.valueOf(mPasswordText.getText());
+            int expireDate = Integer.parseInt(mExpireText.getText().toString());
             CNFCTag tag = mCnfcDetector.getTagFromIntent(intent);
+
             if (tag != null) {
-                String serviceIdString = ssid;
+
+                // nfcに書き込むjson
+                String serviceIdString = WifiHelper.createJson(ssid, pass, 1, expireDate);
                 byte[] serviceId = serviceIdString.getBytes(StandardCharsets.UTF_8);
 
                 boolean success = false;
@@ -96,17 +111,20 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if (success) {
-                    Toast.makeText(this, "SUCCESS！", Toast.LENGTH_SHORT).show();
+                    Toast.makeText  (this, "SUCCESS！", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "FAILED！", Toast.LENGTH_SHORT).show();
                 }
 
+                mWriteButton.setText("WRITE");
                 isWriting = false;
             }
         }
         // 読み込み（wifi接続）
-        else if(isConnectiong) {
+        else if(isConnecting) {
             CNFCReaderTag tag = null;
+            Wifi wifi = null;
+
             try {
                 tag = mCnfcReader.getTagFromIntent(intent);
             } catch (CNFCReaderException e) {
@@ -116,17 +134,22 @@ public class MainActivity extends AppCompatActivity {
             if (tag != null) {
                 String chipId = tag.getChipIdString();
                 String serviceId = tag.getServiceIdString();
-                Toast.makeText(this, "chipId=" + chipId + "\nserviceId=" + serviceId, Toast.LENGTH_SHORT).show();
-            } else {
-//                super.onNewIntent(intent);
+                Toast.makeText(this, "chipId=" + chipId + "\njson=" + serviceId, Toast.LENGTH_LONG).show();
+
+                try {
+                    wifi = WifiHelper.parseJsonToObj(serviceId);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
 
             // 接続期限日時のインスタンスを作成
-            final Calendar calendarExpire = Calendar.getInstance();
+            Calendar calendarExpire;
 
             // 接続期限日時の算出
+            calendarExpire = Calendar.getInstance();
             calendarExpire.setTime(new Date(System.currentTimeMillis()));
-            calendarExpire.add(Calendar.SECOND, Integer.parseInt(mExpireText.getText().toString()));
+            calendarExpire.add(Calendar.DATE, wifi.getDays());
 
             // Wifiをオン
             if(!WifiConnect.isEnable(getApplicationContext()))
@@ -135,42 +158,41 @@ public class MainActivity extends AppCompatActivity {
             // Wifi設定
             WifiConnect wifiConnect = new WifiConnect(
                     this,
-                    ssid,
-                    pass,
+                    wifi.getSsid(),
+                    wifi.getPass(),
                     WifiConnect.WPA_WPA2PSK,
                     calendarExpire
             );
 
             // Wifi接続
             wifiConnect.tryConnect();
+
+            mConnectButton.setText("CONNECT");
+            isConnecting = false;
         }
     }
 
     public void onWriteButtonClicked(View view) {
         if (isWriting) {
             // キャンセル
-            mCnfcDetector.disableForegroundDispatch(this);
             mWriteButton.setText("WRITE");
             isWriting = false;
         } else {
             // 書き込み
-            mCnfcDetector.enableForegroundDispatch(this);
             mWriteButton.setText("CANCEL");
             isWriting = true;
         }
     }
 
     public void onConnectButtonClicked(View view) {
-        if (isConnectiong) {
+        if (isConnecting) {
             // キャンセル
-            mCnfcReader.disableForegroundDispatch(this);
             mConnectButton.setText("CONNECT");
-            isConnectiong = false;
+            isConnecting = false;
         } else {
             // 書き込み
-            mCnfcReader.enableForegroundDispatch(this);
             mConnectButton.setText("CANCEL");
-            isConnectiong = true;
+            isConnecting = true;
         }
     }
 }

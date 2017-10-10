@@ -18,10 +18,10 @@ public class CNFCDetector {
     private final IntentFilter[] intentFilters;
     private final String[][] techList;
 
-    public CNFCDetector(Context context) throws NFCNotAvailableException {
+    public CNFCDetector(Context context) throws NFCToWriteNotAvailableException {
         nfcAdapter = NfcAdapter.getDefaultAdapter(context);
         if (nfcAdapter == null) {
-            throw new NFCNotAvailableException();
+            throw new NFCToWriteNotAvailableException();
         }
 
         pendingIntent = PendingIntent.getActivity(context, 0,
