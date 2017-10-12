@@ -83,7 +83,10 @@ public class MainActivity extends AppCompatActivity
 
         // アプリ未起動でNFCタグが呼ばれた場合も読み込み
         if (getIntent() != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
-            startScan(false);
+
+            // 読み込み画面を表示し読み込み処理を開始
+            isScanning = true;
+            mScanConstraintLayout.setVisibility(View.VISIBLE);
             scanNfc(getIntent());
         }
     }
@@ -137,7 +140,14 @@ public class MainActivity extends AppCompatActivity
                             connectWifi(readWifi, expirationDay);
                         }
                     })
-                    .setNegativeButton(getString(R.string.cancel), null)
+                    .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // 読み込み画面を非表示
+                            isScanning = false;
+                            closeScanPage();
+                        }
+                    })
                     .show();
         } else {
             connectWifi(wifi, expirationDay);
@@ -171,47 +181,31 @@ public class MainActivity extends AppCompatActivity
 
     public void onStartScanButtonClicked(View view) {
         if(!isScanning) {
-            startScan(true);
-        }
-    }
-
-    private void startScan(boolean enableForegroundDispatch) {
-        // nfc読み込み待機
-        if(enableForegroundDispatch)    // enableForegroundDispatchの実行有無を判定
+            
+            // nfc読み込み待機
             mCoronaNfc.enableForegroundDispatch(MainActivity.this);
-        isScanning = true;
-
-        // 読み込み画面を表示
-        mScanDialogConstraintLayout.setVisibility(View.VISIBLE);
-        mScanConstraintLayout.setVisibility(View.VISIBLE);
-        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_from_bottom));
-        mScanConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in_slowly));
+            isScanning = true;
+            openScanPage();
+        }
     }
 
     public void onCancelScanButtonClicked(View view) {
         if(isScanning) {
-            cancelScan(true);
+            cancelScan();
         }
     }
 
-    private void cancelScan(boolean disableForegroundDispatch) {
+    private void cancelScan() {
         // nfc読み込み待機を解除
-        if(disableForegroundDispatch)    // enableForegroundDispatchの実行有無を判定
-            mCoronaNfc.disableForegroundDispatch(MainActivity.this);
+        mCoronaNfc.disableForegroundDispatch(MainActivity.this);
         isScanning = false;
-
-        // 読み込み画面を非表示
-        mScanDialogConstraintLayout.setVisibility(View.GONE);
-        mScanConstraintLayout.setVisibility(View.GONE);
-        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
-        mScanConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+        closeScanPage();
     }
 
     private void connectWifi(Wifi wifi, Calendar expirationDay) {
 
         // 読み込み画面を非表示（背景は残す）
-        mScanDialogConstraintLayout.setVisibility(View.GONE);
-        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
+        closeScanDialog();
 
         // Wifi設定
         WifiConnector wifiConnector = new WifiConnector(
@@ -234,13 +228,35 @@ public class MainActivity extends AppCompatActivity
         startActivity(intent);
     }
 
+    // 読み込み画面を非表示
+    private void closeScanPage() {
+        mScanDialogConstraintLayout.setVisibility(View.GONE);
+        mScanConstraintLayout.setVisibility(View.GONE);
+        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
+        mScanConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+    }
+
+    // 読み込み画面を非表示（背景は残す）
+    private void closeScanDialog() {
+        mScanDialogConstraintLayout.setVisibility(View.GONE);
+        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
+    }
+
+    // 読み込み画面を表示
+    private void openScanPage() {
+        mScanDialogConstraintLayout.setVisibility(View.VISIBLE);
+        mScanConstraintLayout.setVisibility(View.VISIBLE);
+        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_from_bottom));
+        mScanConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in_slowly));
+    }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event){
         if(keyCode == KeyEvent.KEYCODE_BACK) {
 
             // 読み込み中に戻るタップでスキャン中止
             if(isScanning) {
-                cancelScan(true);
+                cancelScan();
             } else {
                 finish();
             }
