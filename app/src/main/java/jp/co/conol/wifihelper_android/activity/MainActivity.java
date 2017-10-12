@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity
 
     SharedPreferences mPref;
     Gson mGson = new Gson();
+    Handler mScanDialogAutoCloseHandler = new Handler();
     WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
     WifiStateBroadcastReceiver mWifiStateBroadcastReceiver = new WifiStateBroadcastReceiver();
     private CoronaNfc mCoronaNfc;
@@ -247,7 +248,7 @@ public class MainActivity extends AppCompatActivity
             openScanPage();
 
             // 60秒後に自動で閉じる
-            new Handler().postDelayed(new Runnable() {
+            mScanDialogAutoCloseHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     if(isScanning) {
@@ -261,6 +262,9 @@ public class MainActivity extends AppCompatActivity
     public void onCancelScanButtonClicked(View view) {
         if(isScanning) {
             cancelScan();
+
+            // 60秒後に閉じる予約をキャンセル
+            mScanDialogAutoCloseHandler.removeCallbacksAndMessages(null);
         }
     }
 
