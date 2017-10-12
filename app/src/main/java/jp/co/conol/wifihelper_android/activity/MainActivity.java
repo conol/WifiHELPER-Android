@@ -245,6 +245,16 @@ public class MainActivity extends AppCompatActivity
             mCoronaNfc.enableForegroundDispatch(MainActivity.this);
             isScanning = true;
             openScanPage();
+
+            // 60秒後に自動で閉じる
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(isScanning) {
+                        cancelScan();
+                    }
+                }
+            }, 60000);
         }
     }
 
