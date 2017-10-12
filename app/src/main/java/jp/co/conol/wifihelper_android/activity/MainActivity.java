@@ -18,7 +18,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.AnimationUtils;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -30,7 +29,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import jp.co.conol.wifihelper_admin_lib.Util;
 import jp.co.conol.wifihelper_admin_lib.corona.CoronaNfc;
 import jp.co.conol.wifihelper_admin_lib.corona.NFCNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
@@ -56,7 +54,7 @@ public class MainActivity extends AppCompatActivity
     WifiStateBroadcastReceiver mWifiStateBroadcastReceiver = new WifiStateBroadcastReceiver();
     private CoronaNfc mCoronaNfc;
     private boolean isScanning = false;
-    private ConstraintLayout mScanConstraintLayout;
+    private ConstraintLayout mScanBackgroundConstraintLayout;
     private ConstraintLayout mScanDialogConstraintLayout;
     private ConstraintLayout mConnectingProgressConstraintLayout;
 
@@ -65,7 +63,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mScanConstraintLayout = (ConstraintLayout) findViewById(R.id.ScanConstraintLayout);
+        mScanBackgroundConstraintLayout = (ConstraintLayout) findViewById(R.id.ScanBackgroundConstraintLayout);
         mScanDialogConstraintLayout = (ConstraintLayout) findViewById(R.id.scanDialogConstraintLayout);
         mConnectingProgressConstraintLayout = (ConstraintLayout) findViewById(R.id.connectingProgressConstraintLayout);
 
@@ -146,7 +144,7 @@ public class MainActivity extends AppCompatActivity
 
             // 読み込み画面を表示し読み込み処理を開始
             isScanning = true;
-            mScanConstraintLayout.setVisibility(View.VISIBLE);
+            mScanBackgroundConstraintLayout.setVisibility(View.VISIBLE);
             scanNfc(getIntent());
         }
     }
@@ -304,9 +302,9 @@ public class MainActivity extends AppCompatActivity
     // 読み込み画面を非表示
     private void closeScanPage() {
         mScanDialogConstraintLayout.setVisibility(View.GONE);
-        mScanConstraintLayout.setVisibility(View.GONE);
+        mScanBackgroundConstraintLayout.setVisibility(View.GONE);
         mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
-        mScanConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
     }
 
     // 読み込み画面を非表示（背景は残す）
@@ -318,9 +316,9 @@ public class MainActivity extends AppCompatActivity
     // 読み込み画面を表示
     private void openScanPage() {
         mScanDialogConstraintLayout.setVisibility(View.VISIBLE);
-        mScanConstraintLayout.setVisibility(View.VISIBLE);
+        mScanBackgroundConstraintLayout.setVisibility(View.VISIBLE);
         mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_from_bottom));
-        mScanConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in_slowly));
+        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in_slowly));
     }
 
     @Override
@@ -355,8 +353,8 @@ public class MainActivity extends AppCompatActivity
             mConnectingProgressConstraintLayout.setVisibility(View.GONE);
 
             // 読み込み画面を非表示
-            mScanConstraintLayout.setVisibility(View.GONE);
-            mScanConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+            mScanBackgroundConstraintLayout.setVisibility(View.GONE);
+            mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
 
             // 表示メッセージの作成
             String dialogMessage;
