@@ -1,9 +1,8 @@
-package jp.co.conol.wifihelper_android.lib;
+package jp.co.conol.wifihelper_admin_lib.lib;
 
 import java.util.List;
 
-import jp.co.conol.wifihelper_android.Constants;
-import jp.co.conol.wifihelper_android.model.Device;
+import jp.co.conol.wifihelper_admin_lib.device_manager.model.Device;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -15,10 +14,10 @@ import retrofit2.http.Path;
 public interface ApiInterface {
 
     // サービスキーに紐付いているデバイス情報一覧を取得
-    @GET(Constants.ApiUrl.DEVICES + "{serviceKey}")
-    Call<List<Device>> getDeviceInfoList(
-            @Path("service_key") String serviceKey
-    );
+//    @GET(Constants.ApiUrl.DEVICES + "{serviceKey}")
+//    Call<List<Device>> getDeviceInfoList(
+//            @Path("service_key") String serviceKey
+//    );
 
 //    // ログを送信
 //    @POST(Constants.ApiUrl.LOG + "{serviceKey}")

@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_android.lib;
+package jp.co.conol.wifihelper_admin_lib.lib;
 
 import android.content.Context;
 import android.support.annotation.NonNull;

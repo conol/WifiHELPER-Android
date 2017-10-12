@@ -1,11 +1,14 @@
 package jp.co.conol.wifihelper_android.activity;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.nfc.NfcAdapter;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
@@ -17,18 +20,26 @@ import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
+import jp.co.conol.wifihelper_admin_lib.Util;
 import jp.co.conol.wifihelper_admin_lib.corona.CoronaNfc;
 import jp.co.conol.wifihelper_admin_lib.corona.NFCNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
+import jp.co.conol.wifihelper_admin_lib.device_manager.DeviceIdsGetAsyncTask;
 import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
+import jp.co.conol.wifihelper_android.MyUtil;
 import jp.co.conol.wifihelper_android.R;
 import jp.co.conol.wifihelper_android.receiver.WifiConnectionBroadcastReceiver;
 import jp.co.conol.wifihelper_android.receiver.WifiStateBroadcastReceiver;
@@ -38,11 +49,12 @@ import static android.net.NetworkInfo.State.CONNECTED;
 public class MainActivity extends AppCompatActivity
         implements WifiConnectionBroadcastReceiver.Listener, WifiStateBroadcastReceiver.Listener {
 
+    SharedPreferences mPref;
+    Gson mGson = new Gson();
     WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
     WifiStateBroadcastReceiver mWifiStateBroadcastReceiver = new WifiStateBroadcastReceiver();
     private CoronaNfc mCoronaNfc;
     private boolean isScanning = false;
-    private boolean isWifiEnable = false;
     private ConstraintLayout mScanConstraintLayout;
     private ConstraintLayout mScanDialogConstraintLayout;
     private ConstraintLayout mConnectingProgressConstraintLayout;
@@ -63,6 +75,57 @@ public class MainActivity extends AppCompatActivity
             finish();
         }
 
+        // 本体に登録されているデバイスIDを取得
+        mPref = getSharedPreferences("deviceIds", Context.MODE_PRIVATE);
+        Date deviceIdsSavedTime = new Date(mPref.getLong("deviceIdsSavedTime", -1));
+        List<String> deviceIds = mGson.fromJson(mPref.getString("deviceIds", null), new TypeToken<List>(){}.getType());
+
+        // 現在日時とデバイスID有効期限を算出
+        Calendar currentTime  = Calendar.getInstance();
+        Calendar expireTime  = Calendar.getInstance();
+        currentTime.setTime(new Date(System.currentTimeMillis()));
+        expireTime.setTime(deviceIdsSavedTime);
+        expireTime.add(Calendar.HOUR, 1);
+
+
+        // サーバーに登録されているデバイスIDを取得
+        final Handler handler = new Handler();
+        if (((deviceIds == null || deviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
+                && MyUtil.Network.isConnected(this)) {
+            new DeviceIdsGetAsyncTask(new DeviceIdsGetAsyncTask.AsyncCallback() {
+                @Override
+                public void onSuccess(List<String> deviceIdList) {
+
+                    // デバイスIDと取得日時を保存
+                    SharedPreferences.Editor editor = mPref.edit();
+                    editor.putLong("deviceIdsSavedTime", new Date(System.currentTimeMillis()).getTime());
+                    editor.putString("deviceIds", mGson.toJson(deviceIdList));
+                    editor.apply();
+                }
+
+                @Override
+                public void onFailure(IOException e) {
+                    // デバイスID取得失敗でアラートを表示
+                    handler.post(new Runnable() {
+                        public void run() {
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setMessage(getString(R.string.error_fail_get_device_ids))
+                                    .setPositiveButton(getString(R.string.ok), null)
+                                    .show();
+                        }
+                    });
+                }
+            }).execute();
+        }
+        // デバイスIDが未取得か期限が切れていて、ネットに未接続の場合はエラー
+        else if (((deviceIds == null || deviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
+                && !MyUtil.Network.isConnected(this)) {
+            new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.error_network_disable))
+                    .setPositiveButton(getString(R.string.ok), null)
+                    .show();
+        }
+
         // nfcがオフの場合はダイアログを表示
         if(!mCoronaNfc.isEnable()) {
             new AlertDialog.Builder(this)
@@ -76,10 +139,6 @@ public class MainActivity extends AppCompatActivity
                     .setNegativeButton(getString(R.string.cancel), null)
                     .show();
         }
-
-        // wifiの状態を取得
-        if(WifiConnector.isEnable(getApplicationContext()))
-            isWifiEnable = true;
 
         // アプリ未起動でNFCタグが呼ばれた場合も読み込み
         if (getIntent() != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
@@ -181,7 +240,7 @@ public class MainActivity extends AppCompatActivity
 
     public void onStartScanButtonClicked(View view) {
         if(!isScanning) {
-            
+
             // nfc読み込み待機
             mCoronaNfc.enableForegroundDispatch(MainActivity.this);
             isScanning = true;
