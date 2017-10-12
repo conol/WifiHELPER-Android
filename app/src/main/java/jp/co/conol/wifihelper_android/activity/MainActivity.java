@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity
     WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
     WifiStateBroadcastReceiver mWifiStateBroadcastReceiver = new WifiStateBroadcastReceiver();
     private CoronaNfc mCoronaNfc;
+    private boolean mTryConnectResult = false;
     private boolean isScanning = false;
     private ConstraintLayout mScanBackgroundConstraintLayout;
     private ConstraintLayout mScanDialogConstraintLayout;
@@ -288,7 +289,7 @@ public class MainActivity extends AppCompatActivity
         );
 
         // Wifi接続
-        wifiConnector.tryConnect();
+        mTryConnectResult = wifiConnector.tryConnect();
 
         // wifi接続中を示すプログレスバーの表示
         mConnectingProgressConstraintLayout.setVisibility(View.VISIBLE);
@@ -358,7 +359,7 @@ public class MainActivity extends AppCompatActivity
 
             // 表示メッセージの作成
             String dialogMessage;
-            if(state == CONNECTED)
+            if(mTryConnectResult)
                 dialogMessage = getString(R.string.connecting_wifi_done);
             else
                 dialogMessage = getString(R.string.connecting_wifi_failed);
@@ -369,5 +370,6 @@ public class MainActivity extends AppCompatActivity
                     .setPositiveButton(getString(R.string.ok), null)
                     .show();
         }
+
     }
 }
