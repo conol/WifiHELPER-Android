@@ -9,7 +9,7 @@
     <string name="loading_devices">利用可能なデバイス一覧を取得しています</string>
     <string name="load_devices_failed">デバイス一覧の取得に失敗しました</string>
     <string name="connecting_wifi">利用可能なWi-Fiへ接続を行っています</string>
-    <string name="connecting_wifi_done">Wi-Fiへ接続完了しました</string>
+    <string name="connecting_wifi_done">Wi-WiFiに接続しました！\nインターネットをお楽しみください。</string>
     <string name="connecting_wifi_failed">利用出来るWiFiに接続出来ませんでした。\n再度お試しください。</string>
 
     <!-- nfc -->
