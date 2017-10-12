@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_android;
+package jp.co.conol.wifihelper_android.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,18 +18,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 
-import jp.co.conol.wifihelper_admin_lib.corona.CNFC;
+import jp.co.conol.wifihelper_admin_lib.corona.CoronaNfc;
+import jp.co.conol.wifihelper_admin_lib.corona.NFCNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCTag;
-import jp.co.conol.wifihelper_admin_lib.corona.NFCNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
+import jp.co.conol.wifihelper_android.R;
 
-public class MainActivity extends AppCompatActivity {
+public class WriteNfcActivity extends AppCompatActivity {
 
-    private CNFC mCnfc;
+    private CoronaNfc mCoronaNfc;
     private boolean isWriting = false;
     private boolean isConnecting = false;
     private EditText mSsidText;
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_write_nfc);
 
         mSsidText      = (EditText) findViewById(R.id.ssidText);
         mPasswordText  = (EditText) findViewById(R.id.passwordText);
@@ -49,10 +50,10 @@ public class MainActivity extends AppCompatActivity {
         mWriteButton   = (Button) findViewById(R.id.writeButton);
         mConnectButton = (Button) findViewById(R.id.connectButton);
 
-//        String ssid = "conolAir";
-//        String pass = "RaePh2oh";
-        String ssid = "pr500m-98b038-1";
-        String pass = "21425a9fb852b";
+        String ssid = "conolAir";
+        String pass = "RaePh2oh";
+//        String ssid = "pr500m-98b038-1";
+//        String pass = "21425a9fb852b";
 
         // EditTextに文字セット
         mSsidText.setText(ssid);
@@ -60,15 +61,26 @@ public class MainActivity extends AppCompatActivity {
         mExpireText.setText("10");
 
         try {
-            mCnfc = new CNFC(this);
+            mCoronaNfc = new CoronaNfc(this);
         } catch (NFCNotAvailableException e) {
-            Log.d("CNFC", e.toString());
+            Log.d("CoronaNfc", e.toString());
             finish();
         }
 
-        if(!mCnfc.isEnable()) {
-            Toast.makeText(getApplicationContext(), "WifiHelperを利用するにはNFCをオンにしてください", Toast.LENGTH_LONG).show();
-            startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
+        // nfcがオフの場合はダイアログを表示
+        if(!mCoronaNfc.isEnable()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("NFC設定")
+                    .setMessage("NFCがオフになっています\nNFCをオンに設定してください")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                            startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }
     }
 
@@ -80,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
             String ssid = String.valueOf(mSsidText.getText());
             String pass = String.valueOf(mPasswordText.getText());
             int expireDate = Integer.parseInt(mExpireText.getText().toString());
-            CNFCTag tag = mCnfc.getWriteTagFromIntent(intent);
+            CNFCTag tag = mCoronaNfc.getWriteTagFromIntent(intent);
 
             if (tag != null) {
 
@@ -112,15 +124,16 @@ public class MainActivity extends AppCompatActivity {
             Wifi wifi = null;
 
             try {
-                tag = mCnfc.getReadTagFromIntent(intent);
+                tag = mCoronaNfc.getReadTagFromIntent(intent);
             } catch (CNFCReaderException e) {
                 Log.d("CNFCReader", e.toString());
                 return;
             }
+
             if (tag != null) {
                 String chipId = tag.getChipIdString();
                 String serviceId = tag.getServiceIdString();
-                Toast.makeText(this, "chipId=" + chipId + "\njson=" + serviceId, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "deviceId=" + chipId + "\njson=" + serviceId, Toast.LENGTH_LONG).show();
 
                 try {
                     wifi = WifiHelper.parseJsonToObj(serviceId);
@@ -151,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 // Wifi設定
                                 WifiConnector wifiConnector = new WifiConnector(
-                                        MainActivity.this,
+                                        WriteNfcActivity.this,
                                         readWifi.getSsid(),
                                         readWifi.getPass(),
                                         WifiConnector.WPA_WPA2PSK,
@@ -171,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Wifi設定
                 WifiConnector wifiConnector = new WifiConnector(
-                        MainActivity.this,
+                        WriteNfcActivity.this,
                         wifi.getSsid(),
                         wifi.getPass(),
                         WifiConnector.WPA_WPA2PSK,

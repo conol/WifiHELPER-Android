@@ -27,14 +27,14 @@ import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCTag;
  * Created by Masafumi_Ito on 2017/10/11.
  */
 
-public class CNFC {
+public class CoronaNfc {
 
     private final NfcAdapter nfcAdapter;
     private final PendingIntent pendingIntent;
     private final IntentFilter[] intentFilters;
     private final String[][] techList;
 
-    public CNFC(Context context) throws NFCNotAvailableException {
+    public CoronaNfc(Context context) throws NFCNotAvailableException {
         nfcAdapter = NfcAdapter.getDefaultAdapter(context);
         if (nfcAdapter == null) {
             throw new NFCNotAvailableException();
