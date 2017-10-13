@@ -20,6 +20,11 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import jp.co.conol.wifihelper_admin_lib.Util;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
@@ -132,9 +137,25 @@ public class CoronaNfc {
             CNFCReaderTag t = CNFCReaderTag.get(rec);
             if (t != null) {
 
+                // 現在時間の作成
+                final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.JAPAN);
+                final Date date = new Date(System.currentTimeMillis());
+                String currentDateTime = sdf.format(date);
+
+                // デバイスIDに空白を入れる
+                // TODO 16進数でなくなるとこの部分削除
+                String str = t.getChipIdString();
+                StringBuilder sb = new StringBuilder(str);
+                sb.insert(12," ");
+                sb.insert(10," ");
+                sb.insert(8," ");
+                sb.insert(6," ");
+                sb.insert(4," ");
+                sb.insert(2," ");
+
                 // ログの送信
                 if(Util.Network.isConnected(context)) {
-                    String test[] = {"45 07 a2 cf 15 3a 2a", "2014-10-10T13:50:40", "test", "test"};
+                    String log[] = {sb.toString().toLowerCase(), currentDateTime, "test", "Read"};
                     new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
                         @Override
                         public void onSuccess(JSONObject responseJson) {
@@ -145,7 +166,7 @@ public class CoronaNfc {
                         public void onFailure(Exception e) {
                             Log.d("SendLogFailure", e.toString());
                         }
-                    }).execute(test);
+                    }).execute(log);
                 }
 
                 return t;
