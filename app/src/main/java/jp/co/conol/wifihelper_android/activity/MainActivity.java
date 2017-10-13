@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -72,18 +73,18 @@ public class MainActivity extends AppCompatActivity
         mConnectingProgressConstraintLayout = (ConstraintLayout) findViewById(R.id.connectingProgressConstraintLayout);
 
 
-//        String test[] = {"test", "test", "test", "test"};
-//        new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
-//            @Override
-//            public void onSuccess() {
-//
-//            }
-//
-//            @Override
-//            public void onFailure(Exception e) {
-//
-//            }
-//        }).execute(test);
+        String test[] = {"45 07 a2 cf 15 3a 2a", "2014-10-10T13:50:40", "test", "test"};
+        new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
+            @Override
+            public void onSuccess(JSONObject responseJson) {
+                
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+
+            }
+        }).execute(test);
 
 
         try {

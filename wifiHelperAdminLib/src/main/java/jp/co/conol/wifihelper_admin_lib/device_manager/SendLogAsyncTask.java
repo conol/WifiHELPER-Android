@@ -15,18 +15,17 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Locale;
 
 /**
  * Created by Masafumi_Ito on 2017/10/13.
  */
 
-public class SendLogAsyncTask extends AsyncTask<String, Void, Void> {
+public class SendLogAsyncTask extends AsyncTask<String, Void, JSONObject> {
 
     private AsyncCallback mAsyncCallback = null;
 
     public interface AsyncCallback{
-        void onSuccess();
+        void onSuccess(JSONObject responseJson);
         void onFailure(Exception e);
     }
 
@@ -35,7 +34,7 @@ public class SendLogAsyncTask extends AsyncTask<String, Void, Void> {
     }
 
     @Override
-    protected Void doInBackground(String... params) {
+    protected JSONObject doInBackground(String... params) {
 
         // ログ送信用のjsonを作成
         JSONObject deviceLogsJson = new JSONObject();
@@ -56,6 +55,7 @@ public class SendLogAsyncTask extends AsyncTask<String, Void, Void> {
         }
 
         // サーバーにログを送信
+        JSONObject responseJson = null;
         try {
             String buffer = "";
             HttpURLConnection con = null;
@@ -71,14 +71,11 @@ public class SendLogAsyncTask extends AsyncTask<String, Void, Void> {
             ps.print(deviceLogsJson.toString());
             ps.close();
 
+            // レスポンスを取得
             BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
-            buffer = reader.readLine();
+            String responseJsonString = reader.readLine();
+            responseJson = new JSONObject(responseJsonString);
 
-//            JSONArray jsonArray = new JSONArray(buffer);
-//            for (int i = 0; i < jsonArray.length(); i++) {
-//                JSONObject jsonObject = jsonArray.getJSONObject(i);
-////                Log.d("HTTP REQ", jsonObject.getString("name"));
-//            }
             con.disconnect();
         } catch (Exception e) {
             e.printStackTrace();
@@ -86,35 +83,20 @@ public class SendLogAsyncTask extends AsyncTask<String, Void, Void> {
             onFailure(e);
         }
 
-        return null;
+        return responseJson;
     }
 
     @Override
-    protected void onPostExecute(Void params) {
-        super.onPostExecute(params);
-        onSuccess();
+    protected void onPostExecute(JSONObject responseJson) {
+        super.onPostExecute(responseJson);
+        onSuccess(responseJson);
     }
 
-    private void onSuccess() {
-        this.mAsyncCallback.onSuccess();
+    private void onSuccess(JSONObject responseJson) {
+        this.mAsyncCallback.onSuccess(responseJson);
     }
 
     private void onFailure(Exception e) {
         this.mAsyncCallback.onFailure(e);
-    }
-
-    private String convertToString(InputStream stream) throws IOException {
-        StringBuffer sb = new StringBuffer();
-        String line = "";
-        BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-        while ((line = br.readLine()) != null) {
-            sb.append(line);
-        }
-        try {
-            stream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return sb.toString();
     }
 }
