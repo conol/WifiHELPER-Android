@@ -24,6 +24,7 @@ import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
     private boolean mAvailableService = false;  // 読み込んだタグがWifiHelperに対応しているか否か
     private boolean isScanning = false;
+    List<String> mDeviceIds = new ArrayList<>();    // WifiHelperのサービスに登録されているデバイスのID一覧
     private ConstraintLayout mScanBackgroundConstraintLayout;
     private ConstraintLayout mScanDialogConstraintLayout;
     private ConstraintLayout mConnectingProgressConstraintLayout;
@@ -70,18 +72,18 @@ public class MainActivity extends AppCompatActivity
         mConnectingProgressConstraintLayout = (ConstraintLayout) findViewById(R.id.connectingProgressConstraintLayout);
 
 
-        String test[] = {"test", "test", "test", "test"};
-        new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-
-            }
-        }).execute(test);
+//        String test[] = {"test", "test", "test", "test"};
+//        new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
+//            @Override
+//            public void onSuccess() {
+//
+//            }
+//
+//            @Override
+//            public void onFailure(Exception e) {
+//
+//            }
+//        }).execute(test);
 
 
         try {
@@ -94,7 +96,7 @@ public class MainActivity extends AppCompatActivity
         // 本体に登録されているデバイスIDを取得
         mPref = getSharedPreferences("deviceIds", Context.MODE_PRIVATE);
         Date deviceIdsSavedTime = new Date(mPref.getLong("deviceIdsSavedTime", -1));
-        List<String> deviceIds = mGson.fromJson(mPref.getString("deviceIds", null), new TypeToken<List>(){}.getType());
+        mDeviceIds = mGson.fromJson(mPref.getString("deviceIds", null), new TypeToken<List>(){}.getType());
 
         // 現在日時とデバイスID有効期限を算出
         Calendar currentTime  = Calendar.getInstance();
@@ -103,25 +105,34 @@ public class MainActivity extends AppCompatActivity
         expireTime.setTime(deviceIdsSavedTime);
         expireTime.add(Calendar.HOUR, 1);
 
-
         // サーバーに登録されているデバイスIDを取得
         final Handler handler = new Handler();
-        if (((deviceIds == null || deviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
+        if (((mDeviceIds == null|| mDeviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
                 && MyUtil.Network.isConnected(this)) {
             new GetDeviceIdsAsyncTask(new GetDeviceIdsAsyncTask.AsyncCallback() {
                 @Override
                 public void onSuccess(List<String> deviceIdList) {
 
-                    // デバイスIDと取得日時を保存
-                    SharedPreferences.Editor editor = mPref.edit();
-                    editor.putLong("deviceIdsSavedTime", new Date(System.currentTimeMillis()).getTime());
-                    editor.putString("deviceIds", mGson.toJson(deviceIdList));
-                    editor.apply();
+                    // 接続成功してもデバイスID一覧が無ければエラー
+                    if(deviceIdList == null || deviceIdList.size() == 0) {
+                        showAlertDialog();
+                    } else {
+
+                        // デバイスIDと取得日時を保存
+                        SharedPreferences.Editor editor = mPref.edit();
+                        editor.putLong("deviceIdsSavedTime", new Date(System.currentTimeMillis()).getTime());
+                        editor.putString("deviceIds", mGson.toJson(deviceIdList));
+                        editor.apply();
+                    }
                 }
 
                 @Override
                 public void onFailure(Exception e) {
-                    // デバイスID取得失敗でアラートを表示
+                    showAlertDialog();
+                }
+
+                // デバイスID取得失敗でアラートを表示
+                private void showAlertDialog() {
                     handler.post(new Runnable() {
                         public void run() {
                             new AlertDialog.Builder(MainActivity.this)
@@ -131,10 +142,11 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
                 }
+
             }).execute();
         }
         // デバイスIDが未取得か期限が切れていて、ネットに未接続の場合はエラー
-        else if (((deviceIds == null || deviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
+        else if ((( mDeviceIds == null|| mDeviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
                 && !MyUtil.Network.isConnected(this)) {
             new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.error_network_disable))
@@ -185,52 +197,62 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (tag != null) {
-            String chipId = tag.getChipIdString();
+            String deviceId = tag.getChipIdString();
             String serviceId = tag.getServiceIdString();
 //                Toast.makeText(this, "deviceId=" + chipId + "\njson=" + serviceId, Toast.LENGTH_LONG).show();
 
-            try {
-                final Wifi wifi = WifiHelper.parseJsonToObj(serviceId);
-
-                // 接続期限日時の算出
-                final Calendar expirationDay  = Calendar.getInstance();
-                expirationDay.setTime(new Date(System.currentTimeMillis()));
-                expirationDay.add(Calendar.DATE, wifi.getDays());
-
-                // nfc設定の確認
-                if(!WifiConnector.isEnable(getApplicationContext())) {
-                    new AlertDialog.Builder(this)
-                            .setTitle("Wi-Fi設定")
-                            .setMessage("Wi-Fiがオフになっています\nWi-Fiをオンにしてもよろしいですか？")
-                            .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    WifiConnector.setEnable(MainActivity.this, true);
-                                    connectWifi(wifi, expirationDay);
-                                }
-                            })
-                            .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    // 読み込み画面を非表示
-                                    isScanning = false;
-                                    closeScanPage();
-                                }
-                            })
-                            .show();
-                } else {
-                    connectWifi(wifi, expirationDay);
-                }
-
-                mAvailableService = true;
-            }
-            // 読み込んだnfcがWifiHelperに未対応の場合
-            catch (JSONException e) {
-                e.printStackTrace();
+            // サーバーに登録されているWifiHelper利用可能なデバイスに、タッチされたNFCが含まれているか否か確認
+            if(!mDeviceIds.contains(deviceId)) {
                 new AlertDialog.Builder(MainActivity.this)
-                        .setMessage(getString(R.string.error_read_service_failed))
+                        .setMessage(getString(R.string.error_not_exist_in_devise_ids))
                         .setPositiveButton(getString(R.string.ok), null)
                         .show();
+            }
+            // 含まれていれば処理を進める
+            else {
+                try {
+                    final Wifi wifi = WifiHelper.parseJsonToObj(serviceId);
+
+                    // 接続期限日時の算出
+                    final Calendar expirationDay = Calendar.getInstance();
+                    expirationDay.setTime(new Date(System.currentTimeMillis()));
+                    expirationDay.add(Calendar.DATE, wifi.getDays());
+
+                    // nfc設定の確認
+                    if (!WifiConnector.isEnable(getApplicationContext())) {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Wi-Fi設定")
+                                .setMessage("Wi-Fiがオフになっています\nWi-Fiをオンにしてもよろしいですか？")
+                                .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        WifiConnector.setEnable(MainActivity.this, true);
+                                        connectWifi(wifi, expirationDay);
+                                    }
+                                })
+                                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // 読み込み画面を非表示
+                                        isScanning = false;
+                                        closeScanPage();
+                                    }
+                                })
+                                .show();
+                    } else {
+                        connectWifi(wifi, expirationDay);
+                    }
+
+                    mAvailableService = true;
+                }
+                // 読み込んだnfcがWifiHelperに未対応の場合
+                catch (JSONException e) {
+                    e.printStackTrace();
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setMessage(getString(R.string.error_read_service_failed))
+                            .setPositiveButton(getString(R.string.ok), null)
+                            .show();
+                }
             }
         }
     }

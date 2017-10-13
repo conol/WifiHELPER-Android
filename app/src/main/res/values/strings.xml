@@ -27,6 +27,7 @@
     <string name="connecting_wifi_failed">利用出来るWi-Fiに接続出来ませんでした。\n再度お試しください。</string>
     <string name="load_devices_failed">デバイス一覧の取得に失敗しました</string>
     <string name="error_read_service_failed">このNFCではWi-Fiサービスがご利用できません。</string>
+    <string name="error_not_exist_in_devise_ids">利用されたNFCは本アプリに対応していません。</string>
 
     <!-- 全体 -->
     <string name="ok">OK</string>
