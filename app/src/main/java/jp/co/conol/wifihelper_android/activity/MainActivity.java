@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity
         new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
             @Override
             public void onSuccess(JSONObject responseJson) {
-                
+
             }
 
             @Override
