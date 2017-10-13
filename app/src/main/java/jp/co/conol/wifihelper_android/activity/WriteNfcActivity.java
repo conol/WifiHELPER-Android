@@ -97,7 +97,8 @@ public class WriteNfcActivity extends AppCompatActivity {
             if (tag != null) {
 
                 // nfcに書き込むjson
-                String serviceIdString = WifiHelper.createJson(ssid, pass, 1, expireDate);
+//                String serviceIdString = WifiHelper.createJson(ssid, pass, 1, expireDate);
+                String serviceIdString = "";
                 byte[] serviceId = serviceIdString.getBytes(StandardCharsets.UTF_8);
 
                 boolean success = false;

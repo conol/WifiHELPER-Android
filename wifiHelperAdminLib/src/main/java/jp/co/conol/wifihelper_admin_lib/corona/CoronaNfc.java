@@ -15,13 +15,18 @@ import android.nfc.tech.MifareUltralight;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NfcA;
 import android.os.PatternMatcher;
+import android.util.Log;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 
+import jp.co.conol.wifihelper_admin_lib.Util;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCT2Tag;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCTag;
+import jp.co.conol.wifihelper_admin_lib.device_manager.SendLogAsyncTask;
 
 /**
  * Created by Masafumi_Ito on 2017/10/11.
@@ -29,12 +34,14 @@ import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCTag;
 
 public class CoronaNfc {
 
+    private Context context;
     private final NfcAdapter nfcAdapter;
     private final PendingIntent pendingIntent;
     private final IntentFilter[] intentFilters;
     private final String[][] techList;
 
     public CoronaNfc(Context context) throws NFCNotAvailableException {
+        this.context = context;
         nfcAdapter = NfcAdapter.getDefaultAdapter(context);
         if (nfcAdapter == null) {
             throw new NFCNotAvailableException();
@@ -124,6 +131,23 @@ public class CoronaNfc {
         for (NdefRecord rec: records) {
             CNFCReaderTag t = CNFCReaderTag.get(rec);
             if (t != null) {
+
+                // ログの送信
+                if(Util.Network.isConnected(context)) {
+                    String test[] = {"45 07 a2 cf 15 3a 2a", "2014-10-10T13:50:40", "test", "test"};
+                    new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
+                        @Override
+                        public void onSuccess(JSONObject responseJson) {
+                            Log.d("SendLogSuccess", responseJson.toString());
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.d("SendLogFailure", e.toString());
+                        }
+                    }).execute(test);
+                }
+
                 return t;
             }
         }

@@ -29,9 +29,16 @@
                     android:pathPrefix="/conol.co.jp:cnfc_bt_manu_data"
                     android:scheme="vnd.android.nfc" />
             </intent-filter>
+
+            <!--<intent-filter>-->
+                <!--<action android:name="android.nfc.action.TECH_DISCOVERED" />-->
+            <!--</intent-filter>-->
+            <!--<meta-data-->
+                <!--android:name="android.nfc.action.TECH_DISCOVERED"-->
+                <!--android:resource="@xml/nfc_tech" />-->
         </activity>
         <activity android:name=".activity.WriteNfcActivity" />
-        <activity android:name=".activity.AboutAppActivity"></activity>
+        <activity android:name=".activity.AboutAppActivity"/>
     </application>
 
 </manifest>

@@ -23,7 +23,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,27 +34,24 @@ import jp.co.conol.wifihelper_admin_lib.corona.NFCNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
 import jp.co.conol.wifihelper_admin_lib.device_manager.GetDeviceIdsAsyncTask;
-import jp.co.conol.wifihelper_admin_lib.device_manager.SendLogAsyncTask;
 import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
 import jp.co.conol.wifihelper_android.MyUtil;
 import jp.co.conol.wifihelper_android.R;
 import jp.co.conol.wifihelper_android.receiver.WifiConnectionBroadcastReceiver;
-import jp.co.conol.wifihelper_android.receiver.WifiStateBroadcastReceiver;
 
 import static android.net.NetworkInfo.State.CONNECTED;
 
-public class MainActivity extends AppCompatActivity
-        implements WifiConnectionBroadcastReceiver.Listener, WifiStateBroadcastReceiver.Listener {
+public class MainActivity extends AppCompatActivity implements WifiConnectionBroadcastReceiver.Listener {
 
     SharedPreferences mPref;
     Gson mGson = new Gson();
     Handler mScanDialogAutoCloseHandler = new Handler();
     WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
-    WifiStateBroadcastReceiver mWifiStateBroadcastReceiver = new WifiStateBroadcastReceiver();
     private CoronaNfc mCoronaNfc;
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
+    private boolean mWifiStateChange = false;  // 本アプリからWifiをオンに切り替えたか否か
     private boolean mAvailableService = false;  // 読み込んだタグがWifiHelperに対応しているか否か
     private boolean isScanning = false;
     List<String> mDeviceIds = new ArrayList<>();    // WifiHelperのサービスに登録されているデバイスのID一覧
@@ -72,21 +68,6 @@ public class MainActivity extends AppCompatActivity
         mScanDialogConstraintLayout = (ConstraintLayout) findViewById(R.id.scanDialogConstraintLayout);
         mConnectingProgressConstraintLayout = (ConstraintLayout) findViewById(R.id.connectingProgressConstraintLayout);
 
-
-        String test[] = {"45 07 a2 cf 15 3a 2a", "2014-10-10T13:50:40", "test", "test"};
-        new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
-            @Override
-            public void onSuccess(JSONObject responseJson) {
-
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-
-            }
-        }).execute(test);
-
-
         try {
             mCoronaNfc = new CoronaNfc(this);
         } catch (NFCNotAvailableException e) {
@@ -97,7 +78,10 @@ public class MainActivity extends AppCompatActivity
         // 本体に登録されているデバイスIDを取得
         mPref = getSharedPreferences("deviceIds", Context.MODE_PRIVATE);
         Date deviceIdsSavedTime = new Date(mPref.getLong("deviceIdsSavedTime", -1));
-        mDeviceIds = mGson.fromJson(mPref.getString("deviceIds", null), new TypeToken<List>(){}.getType());
+
+        String test = mPref.getString("deviceIds", null);
+
+        mDeviceIds = mGson.fromJson(mPref.getString("deviceIds", null), new TypeToken<List<String>>(){}.getType());
 
         // 現在日時とデバイスID有効期限を算出
         Calendar currentTime  = Calendar.getInstance();
@@ -124,6 +108,8 @@ public class MainActivity extends AppCompatActivity
                         editor.putLong("deviceIdsSavedTime", new Date(System.currentTimeMillis()).getTime());
                         editor.putString("deviceIds", mGson.toJson(deviceIdList));
                         editor.apply();
+
+                        mDeviceIds = deviceIdList;
                     }
                 }
 
@@ -188,7 +174,6 @@ public class MainActivity extends AppCompatActivity
 
     private void scanNfc(Intent intent) {
         CNFCReaderTag tag = null;
-//        Wifi wifi = null;
 
         try {
             tag = mCoronaNfc.getReadTagFromIntent(intent);
@@ -198,61 +183,65 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (tag != null) {
-            String deviceId = tag.getChipIdString();
+            String deviceId = tag.getChipIdString().toLowerCase();
             String serviceId = tag.getServiceIdString();
 //                Toast.makeText(this, "deviceId=" + chipId + "\njson=" + serviceId, Toast.LENGTH_LONG).show();
 
             // サーバーに登録されているWifiHelper利用可能なデバイスに、タッチされたNFCが含まれているか否か確認
-            if(!mDeviceIds.contains(deviceId)) {
-                new AlertDialog.Builder(MainActivity.this)
-                        .setMessage(getString(R.string.error_not_exist_in_devise_ids))
-                        .setPositiveButton(getString(R.string.ok), null)
-                        .show();
-            }
-            // 含まれていれば処理を進める
-            else {
-                try {
-                    final Wifi wifi = WifiHelper.parseJsonToObj(serviceId);
-
-                    // 接続期限日時の算出
-                    final Calendar expirationDay = Calendar.getInstance();
-                    expirationDay.setTime(new Date(System.currentTimeMillis()));
-                    expirationDay.add(Calendar.DATE, wifi.getDays());
-
-                    // nfc設定の確認
-                    if (!WifiConnector.isEnable(getApplicationContext())) {
-                        new AlertDialog.Builder(this)
-                                .setTitle("Wi-Fi設定")
-                                .setMessage("Wi-Fiがオフになっています\nWi-Fiをオンにしてもよろしいですか？")
-                                .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        WifiConnector.setEnable(MainActivity.this, true);
-                                        connectWifi(wifi, expirationDay);
-                                    }
-                                })
-                                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        // 読み込み画面を非表示
-                                        isScanning = false;
-                                        closeScanPage();
-                                    }
-                                })
-                                .show();
-                    } else {
-                        connectWifi(wifi, expirationDay);
-                    }
-
-                    mAvailableService = true;
-                }
-                // 読み込んだnfcがWifiHelperに未対応の場合
-                catch (JSONException e) {
-                    e.printStackTrace();
+            if(mDeviceIds != null) {
+                if (!mDeviceIds.contains(deviceId)) {
                     new AlertDialog.Builder(MainActivity.this)
-                            .setMessage(getString(R.string.error_read_service_failed))
+                            .setMessage(getString(R.string.error_not_exist_in_devise_ids))
                             .setPositiveButton(getString(R.string.ok), null)
                             .show();
+                }
+                // 含まれていれば処理を進める
+                else {
+                    try {
+                        final Wifi wifi = WifiHelper.parseJsonToObj(serviceId);
+
+                        // 接続期限日時の算出
+                        final Calendar expirationDay = Calendar.getInstance();
+                        expirationDay.setTime(new Date(System.currentTimeMillis()));
+                        expirationDay.add(Calendar.DATE, wifi.getDays());
+
+                        // nfc設定の確認
+                        if (!WifiConnector.isEnable(getApplicationContext())) {
+                            new AlertDialog.Builder(this)
+                                    .setTitle("Wi-Fi設定")
+                                    .setMessage("Wi-Fiがオフになっています\nWi-Fiをオンにしてもよろしいですか？")
+                                    .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            mWifiStateChange = true;
+                                            WifiConnector.setEnable(MainActivity.this, true);
+                                            connectWifi(wifi, expirationDay);
+                                        }
+                                    })
+                                    .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            // 読み込み画面を非表示
+                                            isScanning = false;
+                                            closeScanPage();
+                                        }
+                                    })
+                                    .show();
+                        } else {
+                            mWifiStateChange = false;
+                            connectWifi(wifi, expirationDay);
+                        }
+
+                        mAvailableService = true;
+                    }
+                    // 読み込んだnfcがWifiHelperに未対応の場合
+                    catch (JSONException e) {
+                        e.printStackTrace();
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setMessage(getString(R.string.error_read_service_failed))
+                                .setPositiveButton(getString(R.string.ok), null)
+                                .show();
+                    }
                 }
             }
         }
@@ -266,11 +255,6 @@ public class MainActivity extends AppCompatActivity
         IntentFilter wifiConnectionIntentFilter = new IntentFilter();
         wifiConnectionIntentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         registerReceiver(mWifiConnectionBroadcastReceiver, wifiConnectionIntentFilter);
-
-        // Wifi監視用のレシーバーを登録
-        IntentFilter wifiStateIntentFilter = new IntentFilter();
-        wifiStateIntentFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-        registerReceiver(mWifiStateBroadcastReceiver, wifiStateIntentFilter);
     }
 
     @Override
@@ -280,7 +264,6 @@ public class MainActivity extends AppCompatActivity
 
         // レシーバーを解除
         unregisterReceiver(mWifiConnectionBroadcastReceiver);
-        unregisterReceiver(mWifiStateBroadcastReceiver);
     }
 
     public void onStartScanButtonClicked(View view) {
@@ -382,15 +365,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void getWifiState(int currentState) {
-//        if(currentState == WifiManager.WIFI_STATE_ENABLED) {
-//            isWifiEnable = true;
-//        } else if(currentState == WifiManager.WIFI_STATE_DISABLED) {
-//            isWifiEnable = false;
-//        }
-    }
-
-    @Override
     public void getWifiConnectionState(NetworkInfo.State state) {
         if(isScanning && mAvailableService && state == CONNECTED ) {
             isScanning = false;
@@ -404,8 +378,8 @@ public class MainActivity extends AppCompatActivity
 
             // 表示メッセージの作成
             String dialogMessage;
-            if(mConnectedAp)
-                dialogMessage = getString(R.string.connecting_wifi_done);
+            if(mConnectedAp || (!mConnectedAp && mWifiStateChange))         // wifiオフ→オンにすると、Wifi接続はfalseを返す（その時点でwifiにつながっていないため）、
+                dialogMessage = getString(R.string.connecting_wifi_done);   // APの設定はされるため、Wifiがオンになっている事により繋がる
             else
                 dialogMessage = getString(R.string.connecting_wifi_failed);
 

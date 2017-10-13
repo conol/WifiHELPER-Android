@@ -43,7 +43,7 @@ public class GetDeviceIdsAsyncTask extends AsyncTask<Void, Void, List<String>> {
 
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject jRec = jsonArray.getJSONObject(i);
-                    String string = jRec.getString("device_id");
+                    String string = jRec.getString("device_id").replace(" ", "").toLowerCase();
                     deviceIdList.add(string);
                 }
 
