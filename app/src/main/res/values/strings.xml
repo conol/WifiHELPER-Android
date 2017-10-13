@@ -7,10 +7,8 @@
     <string name="start_reading">NFCリーダーを起動してタップする</string>
     <string name="loaded_devices">最新状態です。アプリをご利用頂けます。</string>
     <string name="loading_devices">利用可能なデバイス一覧を取得しています</string>
-    <string name="load_devices_failed">デバイス一覧の取得に失敗しました</string>
     <string name="connecting_wifi">利用可能なWi-Fiへ接続を行っています</string>
-    <string name="connecting_wifi_done">Wi-WiFiに接続しました！\nインターネットをお楽しみください。</string>
-    <string name="connecting_wifi_failed">利用出来るWiFiに接続出来ませんでした。\n再度お試しください。</string>
+    <string name="connecting_wifi_done">Wi-Fiに接続しました！\nインターネットをお楽しみください。</string>
 
     <!-- nfc -->
     <string name="nfc_scan_title">スキャンの準備ができました</string>
@@ -23,9 +21,12 @@
     <string name="about_app_note">※ ご利用企業様に応じて若干見た目が異なる場合がございます。</string>
     <string name="about_app_contact">CORONAについてのお問合わせはこちら</string>
 
-    <!-- 初回起動エラー -->
+    <!-- エラー -->
     <string name="error_network_disable">初回セットアップが必要です。\n一度インターネットに繋いで、アプリを再起動してください。</string>
     <string name="error_fail_get_device_ids">一覧データの取得に失敗しました。\nアプリを再起動して再取得してください。</string>
+    <string name="connecting_wifi_failed">利用出来るWi-Fiに接続出来ませんでした。\n再度お試しください。</string>
+    <string name="load_devices_failed">デバイス一覧の取得に失敗しました</string>
+    <string name="error_read_service_failed">このNFCではWi-Fiサービスがご利用できません。</string>
 
     <!-- 全体 -->
     <string name="ok">OK</string>

@@ -19,22 +19,17 @@ import java.util.List;
  * Created by Masafumi_Ito on 2017/10/12.
  */
 
-public class DeviceIdsGetAsyncTask extends AsyncTask<Void, Void, List<String>> {
+public class GetDeviceIdsAsyncTask extends AsyncTask<Void, Void, List<String>> {
 
     private AsyncCallback mAsyncCallback = null;
 
     public interface AsyncCallback{
         void onSuccess(List<String> deviceIdList);
-        void onFailure(IOException e);
+        void onFailure(Exception e);
     }
 
-    public DeviceIdsGetAsyncTask(AsyncCallback asyncCallback){
+    public GetDeviceIdsAsyncTask(AsyncCallback asyncCallback){
         this.mAsyncCallback = asyncCallback;
-    }
-
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
     }
 
     protected List<String> doInBackground(Void... params){
@@ -66,16 +61,11 @@ public class DeviceIdsGetAsyncTask extends AsyncTask<Void, Void, List<String>> {
         onSuccess(deviceIdList);
     }
 
-    @Override
-    protected void onCancelled() {
-        super.onCancelled();
-    }
-
     private void onSuccess(List<String> deviceIdList) {
         this.mAsyncCallback.onSuccess(deviceIdList);
     }
 
-    private void onFailure(IOException e) {
+    private void onFailure(Exception e) {
         this.mAsyncCallback.onFailure(e);
     }
 
@@ -104,7 +94,7 @@ public class DeviceIdsGetAsyncTask extends AsyncTask<Void, Void, List<String>> {
 
             return str_json;
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             onFailure(e);
             return null;

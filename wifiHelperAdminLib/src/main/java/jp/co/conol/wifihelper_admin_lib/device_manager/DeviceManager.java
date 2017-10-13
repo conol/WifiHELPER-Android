@@ -1,18 +1,6 @@
 package jp.co.conol.wifihelper_admin_lib.device_manager;
 
-import android.support.annotation.NonNull;
-import android.util.Log;
 
-import java.util.List;
-
-import jp.co.conol.wifihelper_admin_lib.device_manager.model.Device;
-import jp.co.conol.wifihelper_admin_lib.lib.ApiInterface;
-import jp.co.conol.wifihelper_admin_lib.lib.ClientHelper;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by Masafumi_Ito on 2017/10/11.
