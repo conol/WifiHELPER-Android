@@ -1,16 +1,23 @@
 package jp.co.conol.wifihelper_android.activity;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.nfc.NfcAdapter;
+import android.os.Build;
 import android.os.Handler;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,6 +25,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.AnimationUtils;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -41,6 +49,7 @@ import jp.co.conol.wifihelper_android.MyUtil;
 import jp.co.conol.wifihelper_android.R;
 import jp.co.conol.wifihelper_android.receiver.WifiConnectionBroadcastReceiver;
 
+import static android.content.Intent.FLAG_ACTIVITY_NO_HISTORY;
 import static android.net.NetworkInfo.State.CONNECTED;
 
 public class MainActivity extends AppCompatActivity implements WifiConnectionBroadcastReceiver.Listener {
@@ -55,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private boolean mAvailableService = false;  // 読み込んだタグがWifiHelperに対応しているか否か
     private boolean isScanning = false;
     List<String> mDeviceIds = new ArrayList<>();    // WifiHelperのサービスに登録されているデバイスのID一覧
+    private final int PERMISSION_REQUEST_CODE = 1000;
     private ConstraintLayout mScanBackgroundConstraintLayout;
     private ConstraintLayout mScanDialogConstraintLayout;
     private ConstraintLayout mConnectingProgressConstraintLayout;
@@ -139,6 +149,20 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                     .setMessage(getString(R.string.error_network_disable))
                     .setPositiveButton(getString(R.string.ok), null)
                     .show();
+        }
+
+        // Android6.0以上はACCESS_COARSE_LOCATIONの許可が必要（wifi接続時）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            // 許可されていない場合
+            if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                // 許可を求めるダイアログを表示
+                ActivityCompat.requestPermissions(this,
+                        new String[]{ Manifest.permission.ACCESS_COARSE_LOCATION },
+                        PERMISSION_REQUEST_CODE
+                );
+            }
         }
 
         // nfcがオフの場合はダイアログを表示
@@ -267,22 +291,34 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     }
 
     public void onStartScanButtonClicked(View view) {
-        if(!isScanning) {
+        // Android6.0以上はACCESS_COARSE_LOCATIONの許可が必要（wifi接続時）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            // nfc読み込み待機
-            mCoronaNfc.enableForegroundDispatch(MainActivity.this);
-            isScanning = true;
-            openScanPage();
+                // 許可を求めるダイアログを表示
+                ActivityCompat.requestPermissions(this,
+                        new String[]{ Manifest.permission.ACCESS_COARSE_LOCATION },
+                        PERMISSION_REQUEST_CODE
+                );
 
-            // 60秒後に自動で閉じる
-            mScanDialogAutoCloseHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if(isScanning) {
-                        cancelScan();
+        } else {
+            if (!isScanning) {
+
+                // nfc読み込み待機
+                mCoronaNfc.enableForegroundDispatch(MainActivity.this);
+                isScanning = true;
+                openScanPage();
+
+                // 60秒後に自動で閉じる
+                mScanDialogAutoCloseHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isScanning) {
+                            cancelScan();
+                        }
                     }
-                }
-            }, 60000);
+                }, 60000);
+            }
         }
     }
 
@@ -390,5 +426,16 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                     .show();
         }
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+
+            // パーミッションを許可しない場合
+            if (grantResults.length != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, R.string.grant_permission, Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

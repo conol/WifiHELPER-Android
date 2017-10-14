@@ -38,33 +38,13 @@ public class WifiConnector {
     public static final int WEP         = 2;  // 暗号化方式がWEP
     public static final int FREE        = 3;  // 暗号化なし
 
-    // コンストラクタ（パーミッションのリクエストコード任意設定なし：デフォルトで0）
+    // コンストラクタ
     public WifiConnector(Context context, String ssid, String password, int encMethod, Calendar calendarExpire) {
-        this(context, ssid, password, encMethod, calendarExpire, 0);
-    }
-
-    // コンストラクタ（パーミッションのリクエストコード任意設定あり）
-    public WifiConnector(Context context, String ssid, String password, int encMethod, Calendar calendarExpire, int accessCoarseLocationRequestCode) {
         this.mSsid = ssid;
 
         // wifi設定用インスタンス
         mWifiManager  = (WifiManager)context.getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiConfiguration config = new WifiConfiguration();
-
-        // Android6.0以上はACCESS_COARSE_LOCATIONの許可が必要
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            // 許可されていない場合
-            if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-                // 許可を求めるダイアログを表示
-                ActivityCompat.requestPermissions((Activity) context,
-                        new String[]{ Manifest.permission.ACCESS_COARSE_LOCATION },
-                        accessCoarseLocationRequestCode
-                );
-                return;
-            }
-        }
 
         // ssidが既に登録済みの場合、端末内から設定を取得（要Wifi接続）
         if(mWifiManager.getConfiguredNetworks() != null) {

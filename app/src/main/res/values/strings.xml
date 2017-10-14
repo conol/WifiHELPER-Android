@@ -9,6 +9,7 @@
     <string name="loading_devices">利用可能なデバイス一覧を取得しています</string>
     <string name="connecting_wifi">利用可能なWi-Fiへ接続を行っています</string>
     <string name="connecting_wifi_done">Wi-Fiに接続しました！\nインターネットをお楽しみください。</string>
+    <string name="grant_permission">本アプリを使用するには、位置情報へのアクセスを許可する必要があります。</string>
 
     <!-- nfc -->
     <string name="nfc_scan_title">スキャンの準備ができました</string>

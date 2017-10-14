@@ -15,6 +15,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * Created by Masafumi_Ito on 2017/10/13.
@@ -36,6 +39,10 @@ public class SendLogAsyncTask extends AsyncTask<String, Void, JSONObject> {
     @Override
     protected JSONObject doInBackground(String... params) {
 
+        // 現在時間の作成
+        Calendar cal = Calendar.getInstance();
+        String currentDateTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.JAPAN).format(cal.getTime());
+
         // ログ送信用のjsonを作成
         JSONObject deviceLogsJson = new JSONObject();
         JSONArray deviceLogJsonArray = new JSONArray();
@@ -43,10 +50,10 @@ public class SendLogAsyncTask extends AsyncTask<String, Void, JSONObject> {
             JSONObject jsonOneData;
             jsonOneData = new JSONObject();
             jsonOneData.put("device_id", params[0]);
-            jsonOneData.put("used_at", params[1]);
-            jsonOneData.put("lat_lng", params[2]);
-            jsonOneData.put("notes", params[3]);
-            jsonOneData.put("shop", null);
+            jsonOneData.put("used_at", currentDateTime);
+            jsonOneData.put("lat_lng", params[1]);
+            jsonOneData.put("notes", params[2]);
+            jsonOneData.put("shop", null);  // TODO 後に削除
             deviceLogJsonArray.put(jsonOneData);
 
             deviceLogsJson.put("device_logs", deviceLogJsonArray);
