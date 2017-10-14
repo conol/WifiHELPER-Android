@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         } catch (CNFCReaderException e) {
             Log.d("CNFCReader", e.toString());
             new AlertDialog.Builder(MainActivity.this)
-                    .setMessage(getString(R.string.error_read_service_failed))
+                    .setMessage(getString(R.string.error_not_exist_in_devise_ids))
                     .setPositiveButton(getString(R.string.ok), null)
                     .show();
             return;
