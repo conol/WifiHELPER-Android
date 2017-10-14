@@ -7,9 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -21,19 +18,11 @@ import android.nfc.tech.Ndef;
 import android.nfc.tech.NfcA;
 import android.os.Build;
 import android.os.PatternMatcher;
-import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
 import jp.co.conol.wifihelper_admin_lib.Util;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
@@ -43,7 +32,6 @@ import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCTag;
 import jp.co.conol.wifihelper_admin_lib.device_manager.GetLocation;
 import jp.co.conol.wifihelper_admin_lib.device_manager.SendLogAsyncTask;
 
-import static android.content.Context.LOCATION_SERVICE;
 
 /**
  * Created by Masafumi_Ito on 2017/10/11.

@@ -348,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 MainActivity.this,
                 wifi.getSsid(),
                 wifi.getPass(),
-                WifiConnector.WPA_WPA2PSK,
+                wifi.getKind(),
                 expirationDay
         );
 
