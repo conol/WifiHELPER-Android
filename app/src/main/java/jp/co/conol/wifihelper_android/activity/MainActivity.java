@@ -55,8 +55,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     Gson mGson = new Gson();
     Handler mScanDialogAutoCloseHandler = new Handler();
     WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
-    private Wifi mWifi;
-    private final Calendar mExpirationDay = Calendar.getInstance();
     private CoronaNfc mCoronaNfc;
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
     private boolean mWifiStateChange = false;  // 本アプリからWifiをオンに切り替えたか否か
@@ -218,11 +216,12 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 // 含まれていれば処理を進める
                 else {
                     try {
-                        mWifi = WifiHelper.parseJsonToObj(serviceId);
+                        final Wifi wifi = WifiHelper.parseJsonToObj(serviceId);
 
                         // 接続期限日時の算出
-                        mExpirationDay.setTime(new Date(System.currentTimeMillis()));
-                        mExpirationDay.add(Calendar.DATE, mWifi.getDays());
+                        final Calendar expirationDay = Calendar.getInstance();
+                        expirationDay.setTime(new Date(System.currentTimeMillis()));
+                        expirationDay.add(Calendar.DATE, wifi.getDays());
 
                         // wifi設定の確認
                         if (!WifiConnector.isEnable(getApplicationContext())) {
@@ -250,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                                     .show();
                         } else {
                             mWifiStateChange = false;
-                            connectWifi(mWifi, mExpirationDay);
+                            connectWifi(wifi, expirationDay);
                         }
 
                         mAvailableService = true;
