@@ -48,16 +48,21 @@ import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
 import jp.co.conol.wifihelper_android.MyUtil;
 import jp.co.conol.wifihelper_android.R;
 import jp.co.conol.wifihelper_android.receiver.WifiConnectionBroadcastReceiver;
+import jp.co.conol.wifihelper_android.receiver.WifiStateBroadcastReceiver;
 
 import static android.content.Intent.FLAG_ACTIVITY_NO_HISTORY;
 import static android.net.NetworkInfo.State.CONNECTED;
 
-public class MainActivity extends AppCompatActivity implements WifiConnectionBroadcastReceiver.Listener {
+public class MainActivity extends AppCompatActivity
+        implements WifiConnectionBroadcastReceiver.Listener, WifiStateBroadcastReceiver.Listener {
 
     SharedPreferences mPref;
     Gson mGson = new Gson();
     Handler mScanDialogAutoCloseHandler = new Handler();
+    WifiStateBroadcastReceiver mWifiStateBroadcastReceiver = new WifiStateBroadcastReceiver();
     WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
+    private Wifi mWifi;
+    private final Calendar mExpirationDay = Calendar.getInstance();
     private CoronaNfc mCoronaNfc;
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
     private boolean mWifiStateChange = false;  // 本アプリからWifiをオンに切り替えたか否か
@@ -219,24 +224,27 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 // 含まれていれば処理を進める
                 else {
                     try {
-                        final Wifi wifi = WifiHelper.parseJsonToObj(serviceId);
+                        mWifi = WifiHelper.parseJsonToObj(serviceId);
 
                         // 接続期限日時の算出
-                        final Calendar expirationDay = Calendar.getInstance();
-                        expirationDay.setTime(new Date(System.currentTimeMillis()));
-                        expirationDay.add(Calendar.DATE, wifi.getDays());
+                        mExpirationDay.setTime(new Date(System.currentTimeMillis()));
+                        mExpirationDay.add(Calendar.DATE, mWifi.getDays());
 
-                        // nfc設定の確認
+                        // wifi設定の確認
                         if (!WifiConnector.isEnable(getApplicationContext())) {
                             new AlertDialog.Builder(this)
-                                    .setTitle("Wi-Fi設定")
-                                    .setMessage("Wi-Fiがオフになっています\nWi-Fiをオンにしてもよろしいですか？")
+                                    .setMessage(getString(R.string.wifi_dialog))
                                     .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             mWifiStateChange = true;
                                             WifiConnector.setEnable(MainActivity.this, true);
-                                            connectWifi(wifi, expirationDay);
+
+                                            // 読み込み画面を非表示（背景は残す）
+                                            closeScanDialog();
+
+                                            // wifi接続中を示すプログレスバーの表示
+                                            mConnectingProgressConstraintLayout.setVisibility(View.VISIBLE);
                                         }
                                     })
                                     .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
@@ -250,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                                     .show();
                         } else {
                             mWifiStateChange = false;
-                            connectWifi(wifi, expirationDay);
+                            connectWifi(mWifi, mExpirationDay);
                         }
 
                         mAvailableService = true;
@@ -271,6 +279,11 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Wifi状態視用のレシーバーを登録
+        IntentFilter wifiStateIntentFilter = new IntentFilter();
+        wifiStateIntentFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+        registerReceiver(mWifiStateBroadcastReceiver, wifiStateIntentFilter);
 
         // AP接続監視用のレシーバーを登録
         IntentFilter wifiConnectionIntentFilter = new IntentFilter();
@@ -340,6 +353,9 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         // 読み込み画面を非表示（背景は残す）
         closeScanDialog();
 
+        // wifi接続中を示すプログレスバーの表示
+        mConnectingProgressConstraintLayout.setVisibility(View.VISIBLE);
+
         // Wifi設定
         WifiConnector wifiConnector = new WifiConnector(
                 MainActivity.this,
@@ -351,9 +367,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
         // Wifi接続
         mConnectedAp = wifiConnector.tryConnect();
-
-        // wifi接続中を示すプログレスバーの表示
-        mConnectingProgressConstraintLayout.setVisibility(View.VISIBLE);
     }
 
     public void onAppAboutTextViewTapped(View view) {
@@ -373,6 +386,12 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private void closeScanDialog() {
         mScanDialogConstraintLayout.setVisibility(View.GONE);
         mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
+    }
+
+    // 読み込み画面を非表示（背景）
+    private void closeScanBackground() {
+        mScanBackgroundConstraintLayout.setVisibility(View.GONE);
+        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
     }
 
     // 読み込み画面を表示
@@ -398,6 +417,25 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     }
 
     @Override
+    public void getWifiState(int currentSate) {
+        // アプリからwifiがオンにされた場合は、wifi接続処理を続行
+        if(mWifiStateChange && currentSate == WifiManager.WIFI_STATE_ENABLED) {
+
+            // Wifi設定
+            WifiConnector wifiConnector = new WifiConnector(
+                    MainActivity.this,
+                    mWifi.getSsid(),
+                    mWifi.getPass(),
+                    mWifi.getKind(),
+                    mExpirationDay
+            );
+
+            // Wifi接続
+            mConnectedAp = wifiConnector.tryConnect();
+        }
+    }
+
+    @Override
     public void getWifiConnectionState(NetworkInfo.State state) {
         if(isScanning && mAvailableService && state == CONNECTED ) {
             isScanning = false;
@@ -406,13 +444,16 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
             mConnectingProgressConstraintLayout.setVisibility(View.GONE);
 
             // 読み込み画面を非表示
-            mScanBackgroundConstraintLayout.setVisibility(View.GONE);
-            mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+            if(mWifiStateChange) {
+                closeScanBackground();
+            } else {
+                closeScanPage();
+            }
 
             // 表示メッセージの作成
             String dialogMessage;
-            if(mConnectedAp || (!mConnectedAp && mWifiStateChange))         // wifiオフ→オンにすると、Wifi接続はfalseを返す（その時点でwifiにつながっていないため）、
-                dialogMessage = getString(R.string.connecting_wifi_done);   // APの設定はされるため、Wifiがオンになっている事により繋がる
+            if(mConnectedAp)
+                dialogMessage = getString(R.string.connecting_wifi_done);
             else
                 dialogMessage = getString(R.string.connecting_wifi_failed);
 
@@ -421,6 +462,12 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                     .setMessage(dialogMessage)
                     .setPositiveButton(getString(R.string.ok), null)
                     .show();
+
+            // アプリからWifiがオンにされて接続失敗した場合はwifiをオフに戻す
+            if(!mConnectedAp && mWifiStateChange) {
+                WifiConnector.setEnable(this, false);
+                mWifiStateChange = false;
+            }
         }
 
     }
