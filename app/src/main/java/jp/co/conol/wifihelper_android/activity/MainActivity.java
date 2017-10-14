@@ -39,7 +39,7 @@ import jp.co.conol.wifihelper_admin_lib.corona.CoronaNfc;
 import jp.co.conol.wifihelper_admin_lib.corona.NFCNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
-import jp.co.conol.wifihelper_admin_lib.device_manager.GetDeviceIdsAsyncTask;
+import jp.co.conol.wifihelper_admin_lib.device_manager.GetDevicesAsyncTask;
 import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
@@ -98,22 +98,25 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         final Handler handler = new Handler();
         if (((mDeviceIds == null|| mDeviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
                 && MyUtil.Network.isConnected(this)) {
-            new GetDeviceIdsAsyncTask(new GetDeviceIdsAsyncTask.AsyncCallback() {
+            new GetDevicesAsyncTask(new GetDevicesAsyncTask.AsyncCallback() {
                 @Override
-                public void onSuccess(List<String> deviceIdList) {
+                public void onSuccess(List<List<String>> deviceIdList) {
 
                     // 接続成功してもデバイスID一覧が無ければエラー
                     if(deviceIdList == null || deviceIdList.size() == 0) {
                         showAlertDialog();
                     } else {
 
+                        // デバイスIDのリストを作成
+                        for(int i = 0; i < deviceIdList.size(); i++) {
+                            mDeviceIds.add(deviceIdList.get(i).get(0));
+                        }
+
                         // デバイスIDと取得日時を保存
                         SharedPreferences.Editor editor = mPref.edit();
                         editor.putLong("deviceIdsSavedTime", new Date(System.currentTimeMillis()).getTime());
                         editor.putString("deviceIds", mGson.toJson(deviceIdList));
                         editor.apply();
-
-                        mDeviceIds = deviceIdList;
                     }
                 }
 
