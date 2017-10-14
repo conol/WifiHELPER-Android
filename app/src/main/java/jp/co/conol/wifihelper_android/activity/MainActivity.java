@@ -197,6 +197,10 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
             tag = mCoronaNfc.getReadTagFromIntent(intent);
         } catch (CNFCReaderException e) {
             Log.d("CNFCReader", e.toString());
+            new AlertDialog.Builder(MainActivity.this)
+                    .setMessage(getString(R.string.error_read_service_failed))
+                    .setPositiveButton(getString(R.string.ok), null)
+                    .show();
             return;
         }
 
