@@ -88,9 +88,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         // 本体に登録されているデバイスIDを取得
         mPref = getSharedPreferences("deviceIds", Context.MODE_PRIVATE);
         Date deviceIdsSavedTime = new Date(mPref.getLong("deviceIdsSavedTime", -1));
-
-        String test = mPref.getString("deviceIds", null);
-
         mDeviceIds = mGson.fromJson(mPref.getString("deviceIds", null), new TypeToken<List<String>>(){}.getType());
 
         // 現在日時とデバイスID有効期限を算出

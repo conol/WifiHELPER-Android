@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
@@ -20,9 +21,17 @@ import android.os.Build;
 import android.os.PatternMatcher;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 import jp.co.conol.wifihelper_admin_lib.Util;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
@@ -31,6 +40,7 @@ import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCT2Tag;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCTag;
 import jp.co.conol.wifihelper_admin_lib.device_manager.GetLocation;
 import jp.co.conol.wifihelper_admin_lib.device_manager.SendLogAsyncTask;
+import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
 
 
 /**
@@ -151,6 +161,10 @@ public class CoronaNfc {
             CNFCReaderTag t = CNFCReaderTag.get(rec);
             if (t != null) {
 
+                // 現在時間の作成
+                Calendar cal = Calendar.getInstance();
+                String currentDateTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.JAPAN).format(cal.getTime());
+
                 // 位置情報の取得
                 GetLocation location = new GetLocation(context);
                 String locationInfo = "";
@@ -169,20 +183,50 @@ public class CoronaNfc {
                 sb.insert(4," ");
                 sb.insert(2," ");
 
-                // ログの送信
-                if(Util.Network.isConnected(context)) {
-                    String log[] = {sb.toString().toLowerCase(), locationInfo, "Read"};
+                Gson gson = new Gson();
+
+                // 現在のログを作成
+                String currentLog[] = {sb.toString().toLowerCase(), currentDateTime, locationInfo, "Read"};
+
+                // 本体に登録されているログを取得（2次元配列）
+                final SharedPreferences pref = context.getSharedPreferences("logs", Context.MODE_PRIVATE);
+                String savedLog[][] = gson.fromJson(pref.getString("savedLog", null), String[][].class);
+
+                // サーバーに送信するためのログを作成
+                int toSendLogLength = 1;
+                if(savedLog != null) {
+                    toSendLogLength += savedLog.length;
+                }
+                String toSendLog[][] = new String[toSendLogLength][4];
+                toSendLog[0] = currentLog;
+                if(savedLog != null) {
+                    System.arraycopy(savedLog, 0, toSendLog, 1, toSendLogLength - 1);
+                }
+
+                // ネットに繋がっていればログの送信
+                if(Util.Network.isConnected(context) || WifiConnector.isEnable(context)) {
                     new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
                         @Override
                         public void onSuccess(JSONObject responseJson) {
                             Log.d("SendLogSuccess", responseJson.toString());
+
+                            // 保存されているログは削除
+                            SharedPreferences.Editor editor = pref.edit();
+                            editor.putString("savedLog", null);
+                            editor.apply();
                         }
 
                         @Override
                         public void onFailure(Exception e) {
                             Log.d("SendLogFailure", e.toString());
                         }
-                    }).execute(log);
+                    }).execute(toSendLog);
+                }
+                // ネットに繋がっていなければログを保存
+                else {
+                    SharedPreferences.Editor editor = pref.edit();
+                    editor.putString("savedLog", gson.toJson(toSendLog));
+                    editor.apply();
                 }
 
                 return t;
