@@ -13,6 +13,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".activity.MainActivity"
+            android:screenOrientation="portrait"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -40,7 +41,9 @@
                 <!--android:resource="@xml/nfc_tech" />-->
         </activity>
         <activity android:name=".activity.WriteNfcActivity" />
-        <activity android:name=".activity.AboutAppActivity"/>
+        <activity
+            android:name=".activity.AboutAppActivity"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>
