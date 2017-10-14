@@ -22,15 +22,12 @@ import android.os.PatternMatcher;
 import android.util.Log;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import jp.co.conol.wifihelper_admin_lib.Util;
@@ -197,7 +194,7 @@ public class CoronaNfc {
                 if(savedLog != null) {
                     toSendLogLength += savedLog.length;
                 }
-                String toSendLog[][] = new String[toSendLogLength][4];
+                String toSendLog[][] = new String[toSendLogLength][currentLog.length];
                 toSendLog[0] = currentLog;
                 if(savedLog != null) {
                     System.arraycopy(savedLog, 0, toSendLog, 1, toSendLogLength - 1);

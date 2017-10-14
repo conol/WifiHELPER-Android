@@ -50,10 +50,10 @@ public class WriteNfcActivity extends AppCompatActivity {
         mWriteButton   = (Button) findViewById(R.id.writeButton);
         mConnectButton = (Button) findViewById(R.id.connectButton);
 
-        String ssid = "conolAir";
-        String pass = "RaePh2oh";
-//        String ssid = "pr500m-98b038-1";
-//        String pass = "21425a9fb852b";
+//        String ssid = "conolAir";
+//        String pass = "RaePh2oh";
+        String ssid = "pr500m-98b038-1";
+        String pass = "21425a9fb852b";
 
         // EditTextに文字セット
         mSsidText.setText(ssid);
@@ -97,8 +97,8 @@ public class WriteNfcActivity extends AppCompatActivity {
             if (tag != null) {
 
                 // nfcに書き込むjson
-//                String serviceIdString = WifiHelper.createJson(ssid, pass, 1, expireDate);
-                String serviceIdString = "";
+                String serviceIdString = WifiHelper.createJson(ssid, pass, 1, expireDate);
+//                String serviceIdString = "";
                 byte[] serviceId = serviceIdString.getBytes(StandardCharsets.UTF_8);
 
                 boolean success = false;

@@ -374,34 +374,6 @@ public class MainActivity extends AppCompatActivity
         startActivity(intent);
     }
 
-    // 読み込み画面を非表示
-    private void closeScanPage() {
-        mScanDialogConstraintLayout.setVisibility(View.GONE);
-        mScanBackgroundConstraintLayout.setVisibility(View.GONE);
-        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
-        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
-    }
-
-    // 読み込み画面を非表示（背景は残す）
-    private void closeScanDialog() {
-        mScanDialogConstraintLayout.setVisibility(View.GONE);
-        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
-    }
-
-    // 読み込み画面を非表示（背景）
-    private void closeScanBackground() {
-        mScanBackgroundConstraintLayout.setVisibility(View.GONE);
-        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
-    }
-
-    // 読み込み画面を表示
-    private void openScanPage() {
-        mScanDialogConstraintLayout.setVisibility(View.VISIBLE);
-        mScanBackgroundConstraintLayout.setVisibility(View.VISIBLE);
-        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_from_bottom));
-        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in_slowly));
-    }
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event){
         if(keyCode == KeyEvent.KEYCODE_BACK) {
@@ -444,11 +416,7 @@ public class MainActivity extends AppCompatActivity
             mConnectingProgressConstraintLayout.setVisibility(View.GONE);
 
             // 読み込み画面を非表示
-            if(mWifiStateChange) {
-                closeScanBackground();
-            } else {
-                closeScanPage();
-            }
+            closeScanBackground();
 
             // 表示メッセージの作成
             String dialogMessage;
@@ -481,5 +449,33 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(this, R.string.grant_permission, Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    // 読み込み画面を非表示
+    private void closeScanPage() {
+        mScanDialogConstraintLayout.setVisibility(View.GONE);
+        mScanBackgroundConstraintLayout.setVisibility(View.GONE);
+        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
+        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+    }
+
+    // 読み込み画面を非表示（背景は残す）
+    private void closeScanDialog() {
+        mScanDialogConstraintLayout.setVisibility(View.GONE);
+        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
+    }
+
+    // 読み込み画面を非表示（背景）
+    private void closeScanBackground() {
+        mScanBackgroundConstraintLayout.setVisibility(View.GONE);
+        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+    }
+
+    // 読み込み画面を表示
+    private void openScanPage() {
+        mScanDialogConstraintLayout.setVisibility(View.VISIBLE);
+        mScanBackgroundConstraintLayout.setVisibility(View.VISIBLE);
+        mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_from_bottom));
+        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in_slowly));
     }
 }
