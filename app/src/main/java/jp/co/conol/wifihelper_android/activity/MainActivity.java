@@ -1,7 +1,6 @@
 package jp.co.conol.wifihelper_android.activity;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,7 +12,6 @@ import android.net.wifi.WifiManager;
 import android.nfc.NfcAdapter;
 import android.os.Build;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -48,18 +46,14 @@ import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
 import jp.co.conol.wifihelper_android.MyUtil;
 import jp.co.conol.wifihelper_android.R;
 import jp.co.conol.wifihelper_android.receiver.WifiConnectionBroadcastReceiver;
-import jp.co.conol.wifihelper_android.receiver.WifiStateBroadcastReceiver;
 
-import static android.content.Intent.FLAG_ACTIVITY_NO_HISTORY;
 import static android.net.NetworkInfo.State.CONNECTED;
 
-public class MainActivity extends AppCompatActivity
-        implements WifiConnectionBroadcastReceiver.Listener, WifiStateBroadcastReceiver.Listener {
+public class MainActivity extends AppCompatActivity implements WifiConnectionBroadcastReceiver.Listener {
 
     SharedPreferences mPref;
     Gson mGson = new Gson();
     Handler mScanDialogAutoCloseHandler = new Handler();
-    WifiStateBroadcastReceiver mWifiStateBroadcastReceiver = new WifiStateBroadcastReceiver();
     WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
     private Wifi mWifi;
     private final Calendar mExpirationDay = Calendar.getInstance();
@@ -95,7 +89,7 @@ public class MainActivity extends AppCompatActivity
         Date deviceIdsSavedTime = new Date(mPref.getLong("deviceIdsSavedTime", -1));
         mDeviceIds = mGson.fromJson(mPref.getString("deviceIds", null), new TypeToken<List<String>>(){}.getType());
 
-        // 現在日時とデバイスID有効期限を算出
+        // 現在日時とデバイスID有効期限を算出（一時間）
         Calendar currentTime  = Calendar.getInstance();
         Calendar expireTime  = Calendar.getInstance();
         currentTime.setTime(new Date(System.currentTimeMillis()));
@@ -239,12 +233,10 @@ public class MainActivity extends AppCompatActivity
                                         public void onClick(DialogInterface dialog, int which) {
                                             mWifiStateChange = true;
                                             WifiConnector.setEnable(MainActivity.this, true);
-
-                                            // 読み込み画面を非表示（背景は残す）
-                                            closeScanDialog();
-
-                                            // wifi接続中を示すプログレスバーの表示
-                                            mConnectingProgressConstraintLayout.setVisibility(View.VISIBLE);
+                                            new AlertDialog.Builder(MainActivity.this)
+                                                    .setMessage(getString(R.string.wifi_dialog_done))
+                                                    .setPositiveButton(getString(R.string.ok), null)
+                                                    .show();
                                         }
                                     })
                                     .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
@@ -279,11 +271,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Wifi状態視用のレシーバーを登録
-        IntentFilter wifiStateIntentFilter = new IntentFilter();
-        wifiStateIntentFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-        registerReceiver(mWifiStateBroadcastReceiver, wifiStateIntentFilter);
 
         // AP接続監視用のレシーバーを登録
         IntentFilter wifiConnectionIntentFilter = new IntentFilter();
@@ -389,27 +376,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void getWifiState(int currentSate) {
-        // アプリからwifiがオンにされた場合は、wifi接続処理を続行
-        if(mWifiStateChange && currentSate == WifiManager.WIFI_STATE_ENABLED) {
-
-            // Wifi設定
-            WifiConnector wifiConnector = new WifiConnector(
-                    MainActivity.this,
-                    mWifi.getSsid(),
-                    mWifi.getPass(),
-                    mWifi.getKind(),
-                    mExpirationDay
-            );
-
-            // Wifi接続
-            mConnectedAp = wifiConnector.tryConnect();
-        }
-    }
-
-    @Override
     public void getWifiConnectionState(NetworkInfo.State state) {
-        if(isScanning && mAvailableService && state == CONNECTED ) {
+        if(isScanning && mAvailableService && !mWifiStateChange && state == CONNECTED ) {
             isScanning = false;
 
             // wifi接続中を示すプログレスバーの非表示
@@ -420,7 +388,7 @@ public class MainActivity extends AppCompatActivity
 
             // 表示メッセージの作成
             String dialogMessage;
-            if(mConnectedAp)
+            if(mConnectedAp || (!mConnectedAp && mWifiStateChange))
                 dialogMessage = getString(R.string.connecting_wifi_done);
             else
                 dialogMessage = getString(R.string.connecting_wifi_failed);
@@ -430,12 +398,6 @@ public class MainActivity extends AppCompatActivity
                     .setMessage(dialogMessage)
                     .setPositiveButton(getString(R.string.ok), null)
                     .show();
-
-            // アプリからWifiがオンにされて接続失敗した場合はwifiをオフに戻す
-            if(!mConnectedAp && mWifiStateChange) {
-                WifiConnector.setEnable(this, false);
-                mWifiStateChange = false;
-            }
         }
 
     }
@@ -457,18 +419,21 @@ public class MainActivity extends AppCompatActivity
         mScanBackgroundConstraintLayout.setVisibility(View.GONE);
         mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
         mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+        mScanDialogAutoCloseHandler.removeCallbacksAndMessages(null);
     }
 
     // 読み込み画面を非表示（背景は残す）
     private void closeScanDialog() {
         mScanDialogConstraintLayout.setVisibility(View.GONE);
         mScanDialogConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_to_bottom));
+        mScanDialogAutoCloseHandler.removeCallbacksAndMessages(null);
     }
 
     // 読み込み画面を非表示（背景）
     private void closeScanBackground() {
         mScanBackgroundConstraintLayout.setVisibility(View.GONE);
         mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
+        mScanDialogAutoCloseHandler.removeCallbacksAndMessages(null);
     }
 
     // 読み込み画面を表示
