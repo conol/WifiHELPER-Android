@@ -205,8 +205,6 @@ public class CoronaNfc {
                     new SendLogAsyncTask(new SendLogAsyncTask.AsyncCallback() {
                         @Override
                         public void onSuccess(JSONObject responseJson) {
-                            Log.d("SendLogSuccess", responseJson.toString());
-
                             // 保存されているログは削除
                             SharedPreferences.Editor editor = pref.edit();
                             editor.putString("savedLog", null);
