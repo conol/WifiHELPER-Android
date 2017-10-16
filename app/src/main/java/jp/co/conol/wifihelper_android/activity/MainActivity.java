@@ -59,7 +59,8 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
     private boolean mWifiStateChange = false;  // 本アプリからWifiをオンに切り替えたか否か
     private boolean mAvailableService = false;  // 読み込んだタグがWifiHelperに対応しているか否か
-    private boolean isScanning = false;
+    private boolean isScanning = false; // スキャン待機中か否か
+    private boolean isConnecting = false;   // wifi接続か否か
     private List<String> mDeviceIds = new ArrayList<>();    // WifiHelperのサービスに登録されているデバイスのID一覧
     private final int PERMISSION_REQUEST_CODE = 1000;
     private ConstraintLayout mScanBackgroundConstraintLayout;
@@ -356,6 +357,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
         // wifi接続中を示すプログレスバーの表示
         mConnectingProgressConstraintLayout.setVisibility(View.VISIBLE);
+        isConnecting = true;
 
         // Wifi設定
         WifiConnector wifiConnector = new WifiConnector(
@@ -380,8 +382,13 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         if(keyCode == KeyEvent.KEYCODE_BACK) {
 
             // 読み込み中に戻るタップでスキャン中止
-            if(isScanning) {
+            if(isScanning && !isConnecting) {
                 cancelScan();
+            } else if(isScanning && isConnecting) {
+                isScanning = false;
+                mConnectingProgressConstraintLayout.setVisibility(View.GONE);
+                isConnecting = false;
+                closeScanPage();
             } else {
                 finish();
             }
@@ -396,6 +403,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
             // wifi接続中を示すプログレスバーの非表示
             mConnectingProgressConstraintLayout.setVisibility(View.GONE);
+            isConnecting = false;
 
             // 読み込み画面を非表示
             closeScanBackground();
