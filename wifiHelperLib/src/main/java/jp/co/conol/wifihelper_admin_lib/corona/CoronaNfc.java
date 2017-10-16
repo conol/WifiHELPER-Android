@@ -23,7 +23,6 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -35,8 +34,6 @@ import java.util.TimeZone;
 import jp.co.conol.wifihelper_admin_lib.Util;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
-import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCT2Tag;
-import jp.co.conol.wifihelper_admin_lib.corona.corona_writer.CNFCTag;
 import jp.co.conol.wifihelper_admin_lib.device_manager.GetLocation;
 import jp.co.conol.wifihelper_admin_lib.device_manager.SendLogAsyncTask;
 import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
@@ -89,33 +86,6 @@ public class CoronaNfc {
 
     public void disableForegroundDispatch(Activity activity) {
         nfcAdapter.disableForegroundDispatch(activity);
-    }
-
-    public CNFCTag getWriteTagFromIntent(Intent intent) {
-        // GPSの許可を確認（ログ送信用）
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return null;
-            }
-        }
-
-        if (intent.getAction().equals(NfcAdapter.ACTION_NDEF_DISCOVERED)
-                || intent.getAction().equals(NfcAdapter.ACTION_TECH_DISCOVERED)) {
-            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-            if (tag != null) {
-                /*
-                IsoDep isoDep = IsoDep.get(tag);
-                if (isoDep != null) {
-                    return new CNFCT4Tag(isoDep);
-                }
-                */
-                MifareUltralight mul = MifareUltralight.get(tag);
-                if (mul != null) {
-                    return new CNFCT2Tag(mul);
-                }
-            }
-        }
-        return null;
     }
 
     public CNFCReaderTag getReadTagFromIntent(Intent intent) throws CNFCReaderException {
