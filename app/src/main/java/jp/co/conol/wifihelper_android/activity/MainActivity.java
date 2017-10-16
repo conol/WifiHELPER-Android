@@ -51,16 +51,16 @@ import static android.net.NetworkInfo.State.CONNECTED;
 
 public class MainActivity extends AppCompatActivity implements WifiConnectionBroadcastReceiver.Listener {
 
-    SharedPreferences mPref;
-    Gson mGson = new Gson();
-    Handler mScanDialogAutoCloseHandler = new Handler();
-    WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
+    private SharedPreferences mPref;
+    private Gson mGson = new Gson();
+    private Handler mScanDialogAutoCloseHandler = new Handler();
+    private WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
     private CoronaNfc mCoronaNfc;
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
     private boolean mWifiStateChange = false;  // 本アプリからWifiをオンに切り替えたか否か
     private boolean mAvailableService = false;  // 読み込んだタグがWifiHelperに対応しているか否か
     private boolean isScanning = false;
-    List<String> mDeviceIds = new ArrayList<>();    // WifiHelperのサービスに登録されているデバイスのID一覧
+    private List<String> mDeviceIds = new ArrayList<>();    // WifiHelperのサービスに登録されているデバイスのID一覧
     private final int PERMISSION_REQUEST_CODE = 1000;
     private ConstraintLayout mScanBackgroundConstraintLayout;
     private ConstraintLayout mScanDialogConstraintLayout;
@@ -225,9 +225,13 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                         final Wifi wifi = WifiHelper.parseJsonToObj(serviceId);
 
                         // 接続期限日時の算出
-                        final Calendar expirationDay = Calendar.getInstance();
-                        expirationDay.setTime(new Date(System.currentTimeMillis()));
-                        expirationDay.add(Calendar.DATE, wifi.getDays());
+                        Calendar expirationDay = Calendar.getInstance();
+                        if(wifi.getDays() != null && 1 <= wifi.getDays() && wifi.getDays() <= 365) {
+                            expirationDay.setTime(new Date(System.currentTimeMillis()));
+                            expirationDay.add(Calendar.DATE, wifi.getDays());
+                        } else {
+                            expirationDay = null;
+                        }
 
                         // wifi設定の確認
                         if (!WifiConnector.isEnable(getApplicationContext())) {
