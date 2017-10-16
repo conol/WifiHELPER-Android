@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
             // 読み込み画面を表示し読み込み処理を開始
             isScanning = true;
-            mScanBackgroundConstraintLayout.setVisibility(View.VISIBLE);
+            mLaunchOnSleep = true;
             scanNfc(getIntent());
         }
     }
@@ -262,6 +262,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                             connectWifi(wifi, expirationDay);
                         }
 
+                        mScanBackgroundConstraintLayout.setVisibility(View.VISIBLE);
                         mAvailableService = true;
                     }
                     // 読み込んだnfcがWifiHelperに未対応の場合
@@ -269,8 +270,13 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                         e.printStackTrace();
                         new AlertDialog.Builder(MainActivity.this)
                                 .setMessage(getString(R.string.error_read_service_failed))
-                                .setPositiveButton(getString(R.string.ok), null)
-                                .show();
+                                .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        isScanning = false;
+                                        closeScanPage();
+                                    }
+                                }).show();
                     }
                 }
             }
