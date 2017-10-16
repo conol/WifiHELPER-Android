@@ -180,7 +180,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
             // 読み込み画面を表示し読み込み処理を開始
             isScanning = true;
-            mLaunchOnSleep = true;
             scanNfc(getIntent());
         }
     }
