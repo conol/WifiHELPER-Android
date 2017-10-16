@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                         // デバイスIDと取得日時を保存
                         SharedPreferences.Editor editor = mPref.edit();
                         editor.putLong("deviceIdsSavedTime", new Date(System.currentTimeMillis()).getTime());
-                        editor.putString("deviceIds", mGson.toJson(deviceIdList));
+                        editor.putString("deviceIds", mGson.toJson(mDeviceIds));
                         editor.apply();
                     }
                 }
