@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         mPref = getSharedPreferences("deviceIds", Context.MODE_PRIVATE);
         Date deviceIdsSavedTime = new Date(mPref.getLong("deviceIdsSavedTime", -1));
         mDeviceIds = mGson.fromJson(mPref.getString("deviceIds", null), new TypeToken<List<String>>(){}.getType());
+        if(mDeviceIds == null) mDeviceIds = new ArrayList<>();
 
         // 現在日時とデバイスID有効期限を算出（一時間）
         Calendar currentTime  = Calendar.getInstance();
@@ -96,8 +97,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
         // サーバーに登録されているデバイスIDを取得
         final Handler handler = new Handler();
-        if (((mDeviceIds == null|| mDeviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
-                && MyUtil.Network.isConnected(this)) {
+        if ((mDeviceIds.size() == 0 || 1 == currentTime.compareTo(expireTime)) && MyUtil.Network.isConnected(this)) {
             new GetDevicesAsyncTask(new GetDevicesAsyncTask.AsyncCallback() {
                 @Override
                 public void onSuccess(List<List<String>> deviceIdList) {
@@ -140,8 +140,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
             }).execute();
         }
         // デバイスIDが未取得か期限が切れていて、ネットに未接続の場合はエラー
-        else if ((( mDeviceIds == null|| mDeviceIds.size() == 0) || 1 == currentTime.compareTo(expireTime))
-                && !MyUtil.Network.isConnected(this)) {
+        else if ((mDeviceIds.size() == 0 || 1 == currentTime.compareTo(expireTime)) && !MyUtil.Network.isConnected(this)) {
             new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.error_network_disable))
                     .setPositiveButton(getString(R.string.ok), null)
