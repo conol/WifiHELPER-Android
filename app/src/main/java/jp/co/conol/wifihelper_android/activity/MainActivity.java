@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
     private boolean mWifiStateChange = false;  // 本アプリからWifiをオンに切り替えたか否か
     private boolean mAvailableService = false;  // 読み込んだタグがWifiHelperに対応しているか否か
+    private boolean mOnSleepLaunch = false;  // アプリ未起動時にnfcタッチでアプリが起動したか否か
     private boolean isScanning = false; // スキャン待機中か否か
     private boolean isConnecting = false;   // wifi接続か否か
     private List<String> mDeviceIds = new ArrayList<>();    // WifiHelperのサービスに登録されているデバイスのID一覧
@@ -178,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
         // アプリ未起動でNFCタグが呼ばれた場合も読み込み
         if (getIntent() != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
+            mOnSleepLaunch = true;
 
             // 読み込み画面を表示し読み込み処理を開始
             isScanning = true;
@@ -209,7 +211,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         if (tag != null) {
             String deviceId = tag.getChipIdString().toLowerCase();
             String serviceId = tag.getServiceIdString();
-//                Toast.makeText(this, "deviceId=" + chipId + "\njson=" + serviceId, Toast.LENGTH_LONG).show();
 
             // サーバーに登録されているWifiHelper利用可能なデバイスに、タッチされたNFCが含まれているか否か確認
             if(mDeviceIds != null) {
@@ -246,6 +247,11 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                                                     .setMessage(getString(R.string.wifi_dialog_done))
                                                     .setPositiveButton(getString(R.string.ok), null)
                                                     .show();
+
+                                            // nfcタッチでアプリが起動した場合、スキャンページを開く
+                                            if(mOnSleepLaunch) {
+                                                openScanPage();
+                                            }
                                         }
                                     })
                                     .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
@@ -262,7 +268,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                             connectWifi(wifi, expirationDay);
                         }
 
-                        mScanBackgroundConstraintLayout.setVisibility(View.VISIBLE);
                         mAvailableService = true;
                     }
                     // 読み込んだnfcがWifiHelperに未対応の場合
