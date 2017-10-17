@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private SharedPreferences mPref;
     private Gson mGson = new Gson();
     private Handler mScanDialogAutoCloseHandler = new Handler();
+    private Handler mConnectingTimeoutHandler = new Handler();
     private WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
     private CoronaNfc mCoronaNfc;
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
@@ -183,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
             // 読み込み画面を表示し読み込み処理を開始
             isScanning = true;
+            openScanBackground();
             scanNfc(getIntent());
         }
     }
@@ -317,7 +319,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                         new String[]{ Manifest.permission.ACCESS_COARSE_LOCATION },
                         PERMISSION_REQUEST_CODE
                 );
-
         } else {
             if (!isScanning) {
 
@@ -375,6 +376,25 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
         // Wifi接続
         mConnectedAp = wifiConnector.tryConnect();
+
+        // 10秒間でタイムアウト
+        mConnectingTimeoutHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setMessage(getString(R.string.connecting_wifi_failed_not_ap))
+                        .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                isScanning = false;
+                                mConnectingProgressConstraintLayout.setVisibility(View.GONE);
+                                isConnecting = false;
+                                closeScanBackground();
+                            }
+                        })
+                        .show();
+            }
+        }, 10000);
     }
 
     public void onAppAboutTextViewTapped(View view) {
@@ -386,14 +406,17 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     public boolean onKeyDown(int keyCode, KeyEvent event){
         if(keyCode == KeyEvent.KEYCODE_BACK) {
 
-            // 読み込み中に戻るタップでスキャン中止
+            // スキャンダイアログ表示中に戻るタップでスキャン中止
             if(isScanning && !isConnecting) {
                 cancelScan();
-            } else if(isScanning && isConnecting) {
+            }
+            // wifi接続中に戻るタップで画面終了
+            else if(isScanning && isConnecting) {
                 isScanning = false;
+                mConnectingTimeoutHandler.removeCallbacksAndMessages(null);
                 mConnectingProgressConstraintLayout.setVisibility(View.GONE);
                 isConnecting = false;
-                closeScanPage();
+                closeScanBackground();
             } else {
                 finish();
             }
@@ -404,6 +427,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     @Override
     public void getWifiConnectionState(NetworkInfo.State state) {
         if(isScanning && mAvailableService && !mWifiStateChange && state == CONNECTED ) {
+            mConnectingTimeoutHandler.removeCallbacksAndMessages(null);
             isScanning = false;
 
             // wifi接続中を示すプログレスバーの非表示
@@ -461,6 +485,12 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         mScanBackgroundConstraintLayout.setVisibility(View.GONE);
         mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out_slowly));
         mScanDialogAutoCloseHandler.removeCallbacksAndMessages(null);
+    }
+
+    // 読み込み画面を表示（背景）
+    private void openScanBackground() {
+        mScanBackgroundConstraintLayout.setVisibility(View.VISIBLE);
+        mScanBackgroundConstraintLayout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in_slowly));
     }
 
     // 読み込み画面を表示
