@@ -7,13 +7,13 @@ package jp.co.conol.wifihelper_admin_lib.wifi_helper.model;
 public class Wifi {
 
     private String ssid;
-    private String password;
+    private String pass;
     private int kind;
     private Integer days;
 
-    public Wifi(String ssid, String password, int kind, int days) {
+    public Wifi(String ssid, String pass, int kind, int days) {
         this.ssid = ssid;
-        this.password = password;
+        this.pass = pass;
         this.kind = kind;
         this.days = days;
     }
@@ -22,8 +22,8 @@ public class Wifi {
         return ssid;
     }
 
-    public String getPassword() {
-        return password;
+    public String getPass() {
+        return pass;
     }
 
     public int getKind() {

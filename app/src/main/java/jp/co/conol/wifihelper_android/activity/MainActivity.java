@@ -35,10 +35,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import jp.co.conol.wifihelper_admin_lib.corona.CoronaNfc;
+import jp.co.conol.wifihelper_admin_lib.corona.Corona;
 import jp.co.conol.wifihelper_admin_lib.corona.NFCNotAvailableException;
 import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
-import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
+import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CoronaReaderTag;
 import jp.co.conol.wifihelper_admin_lib.device_manager.GetDevicesAsyncTask;
 import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private Handler mScanDialogAutoCloseHandler = new Handler();
     private Handler mConnectingTimeoutHandler = new Handler();
     private WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
-    private CoronaNfc mCoronaNfc;
+    private Corona mCorona;
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
     private boolean mWifiStateChange = false;  // 本アプリからWifiをオンに切り替えたか否か
     private boolean mAvailableService = false;  // 読み込んだタグがWifiHelperに対応しているか否か
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         mConnectingProgressConstraintLayout = (ConstraintLayout) findViewById(R.id.connectingProgressConstraintLayout);
 
         try {
-            mCoronaNfc = new CoronaNfc(this);
+            mCorona = new Corona(this);
         } catch (NFCNotAvailableException e) {
             Log.d("CoronaNfc", e.toString());
             finish();
@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         if ((mDeviceIds.size() == 0 || 1 == currentTime.compareTo(expireTime)) && MyUtil.Network.isConnected(this)) {
             new GetDevicesAsyncTask(new GetDevicesAsyncTask.AsyncCallback() {
                 @Override
-                public void onSuccess(List<List<String>> deviceIdList) {
+                public void onSuccess(List<String> deviceIdList) {
 
                     // 接続成功してもデバイスID一覧が無ければエラー
                     if(deviceIdList == null || deviceIdList.size() == 0) {
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
                         // デバイスIDのリストを作成
                         for(int i = 0; i < deviceIdList.size(); i++) {
-                            mDeviceIds.add(deviceIdList.get(i).get(0));
+                            mDeviceIds.add(deviceIdList.get(i));
                         }
 
                         // デバイスIDと取得日時を保存
@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         }
 
         // nfcがオフの場合はダイアログを表示
-        if(!mCoronaNfc.isEnable()) {
+        if(!mCorona.isEnable()) {
             new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.nfc_dialog))
                     .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
@@ -197,10 +197,10 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     }
 
     private void scanNfc(Intent intent) {
-        CNFCReaderTag tag = null;
+        CoronaReaderTag tag = null;
 
         try {
-            tag = mCoronaNfc.getReadTagFromIntent(intent);
+            tag = mCorona.getReadTagFromIntent(intent);
         } catch (CNFCReaderException e) {
             Log.d("CNFCReader", e.toString());
             new AlertDialog.Builder(MainActivity.this)
@@ -211,8 +211,8 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         }
 
         if (tag != null) {
-            String deviceId = tag.getChipIdString().toLowerCase();
-            String serviceId = tag.getServiceIdString();
+            String deviceId = tag.getDeviceIdString().toLowerCase();
+            String jsonString = tag.getJSONString();
 
             // サーバーに登録されているWifiHelper利用可能なデバイスに、タッチされたNFCが含まれているか否か確認
             if(mDeviceIds != null) {
@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 // 含まれていれば処理を進める
                 else {
                     try {
-                        final Wifi wifi = WifiHelper.parseJsonToObj(serviceId);
+                        final Wifi wifi = WifiHelper.parseJsonToObj(jsonString);
 
                         // 接続期限日時の算出
                         Calendar expirationDay = Calendar.getInstance();
@@ -303,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     @Override
     protected void onPause() {
         super.onPause();
-        mCoronaNfc.disableForegroundDispatch(MainActivity.this);
+        mCorona.disableForegroundDispatch(MainActivity.this);
 
         // レシーバーを解除
         unregisterReceiver(mWifiConnectionBroadcastReceiver);
@@ -323,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
             if (!isScanning) {
 
                 // nfc読み込み待機
-                mCoronaNfc.enableForegroundDispatch(MainActivity.this);
+                mCorona.enableForegroundDispatch(MainActivity.this);
                 isScanning = true;
                 openScanPage();
 
@@ -351,7 +351,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
     private void cancelScan() {
         // nfc読み込み待機を解除
-        mCoronaNfc.disableForegroundDispatch(MainActivity.this);
+        mCorona.disableForegroundDispatch(MainActivity.this);
         isScanning = false;
         closeScanPage();
     }
@@ -369,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         WifiConnector wifiConnector = new WifiConnector(
                 MainActivity.this,
                 wifi.getSsid(),
-                wifi.getPass(),
+                wifi.getPassword(),
                 wifi.getKind(),
                 expirationDay
         );

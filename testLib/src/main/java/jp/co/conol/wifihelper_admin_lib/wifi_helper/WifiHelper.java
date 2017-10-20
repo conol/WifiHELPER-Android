@@ -1,6 +1,5 @@
 package jp.co.conol.wifihelper_admin_lib.wifi_helper;
 
-import android.content.Intent;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -15,7 +14,7 @@ import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
 
 public class WifiHelper {
 
-    public static String createJson(String ssid, String pass, int kind, Integer days) {
+    public static String createJson(String ssid, String pass, int kind, int days) {
         return "{\"wifi\":{\"ssid\":\"" + ssid + "\",\"pass\":\"" + pass + "\",\"kind\":" + kind + ",\"days\":" + days + "}}";
     }
 
@@ -31,7 +30,7 @@ public class WifiHelper {
         );
     }
 
-    public static boolean isAvailable(String targetJson) throws JSONException {
+    public static boolean isAvailable(String targetJson) {
         try {
             JSONObject jsonObject = new JSONObject(targetJson);
             jsonObject.getJSONObject("wifi");
