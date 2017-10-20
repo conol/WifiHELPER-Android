@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
         if (tag != null) {
             String deviceId = tag.getDeviceIdString().toLowerCase();
-            String jsonString = tag.getJSONString();
+            String jsonString = tag.getJsonString();
 
             // サーバーに登録されているWifiHelper利用可能なデバイスに、タッチされたNFCが含まれているか否か確認
             if(mDeviceIds != null) {
@@ -319,6 +319,19 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                         new String[]{ Manifest.permission.ACCESS_COARSE_LOCATION },
                         PERMISSION_REQUEST_CODE
                 );
+        }
+        // nfcがオフの場合はダイアログを表示
+        else if(!mCorona.isEnable()) {
+            new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.nfc_dialog))
+                    .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
+                        }
+                    })
+                    .setNegativeButton(getString(R.string.cancel), null)
+                    .show();
         } else {
             if (!isScanning) {
 
