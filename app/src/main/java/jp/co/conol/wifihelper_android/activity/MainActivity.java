@@ -38,7 +38,6 @@ import java.util.List;
 import jp.co.conol.wifihelper_admin_lib.corona.Corona;
 import jp.co.conol.wifihelper_admin_lib.corona.CoronaException;
 import jp.co.conol.wifihelper_admin_lib.corona.NfcNotAvailableException;
-import jp.co.conol.wifihelper_admin_lib.device_manager.GetDevicesAsyncTask;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
 import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
 import jp.co.conol.wifihelper_android.MyUtil;
@@ -99,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         // サーバーに登録されているデバイスIDを取得
         final Handler handler = new Handler();
         if ((mDeviceIds.size() == 0 || 1 == currentTime.compareTo(expireTime)) && MyUtil.Network.isConnected(this)) {
-            new GetDevicesAsyncTask(new GetDevicesAsyncTask.AsyncCallback() {
+            new WifiHelper.GetAvailableDevices(new WifiHelper.GetAvailableDevices.AsyncCallback() {
                 @Override
                 public void onSuccess(List<String> deviceIdList) {
 
