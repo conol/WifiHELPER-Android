@@ -224,15 +224,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                     // Wifi設定情報を取得
                     final Wifi wifi = WifiHelper.readWifiSetting(intent, mCuona);
 
-                    // 接続期限日時の算出
-                    Calendar expirationDay = Calendar.getInstance();
-                    if(wifi.getDays() != null && 1 <= wifi.getDays() && wifi.getDays() <= 365) {
-                        expirationDay.setTime(new Date(System.currentTimeMillis()));
-                        expirationDay.add(Calendar.DATE, wifi.getDays());
-                    } else {
-                        expirationDay = null;
-                    }
-
                     // wifi設定の確認
                     if (!WifiHelper.isEnable(getApplicationContext())) {
                         new AlertDialog.Builder(this)
@@ -264,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                                 .show();
                     } else {
                         mWifiStateChange = false;
-                        connectWifi(wifi, expirationDay);
+                        connectWifi(wifi);
                     }
 
                     mAvailableService = true;
@@ -365,7 +356,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         closeScanPage();
     }
 
-    private void connectWifi(Wifi wifi, Calendar expirationDay) {
+    private void connectWifi(Wifi wifi) {
 
         // 読み込み画面を非表示（背景は残す）
         closeScanDialog();
@@ -380,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 wifi.getSsid(),
                 wifi.getPassword(),
                 wifi.getKind(),
-                expirationDay
+                wifi.getDays()
         );
 
         // Wifi接続

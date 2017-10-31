@@ -16,6 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import jp.co.conol.wifihelper_lib.Util;
@@ -41,8 +42,17 @@ public class WifiHelper {
     public static final int FREE        = 3;  // 暗号化なし
 
     // コンストラクタ
-    public WifiHelper(Context context, String ssid, String password, int encMethod, Calendar calendarExpire) {
+    public WifiHelper(Context context, String ssid, String password, int kind, Integer days) {
         this.mSsid = ssid;
+
+        // 接続期限日時の算出
+        Calendar expirationDay = Calendar.getInstance();
+        if(days != null && 1 <= days && days <= 365) {
+            expirationDay.setTime(new Date(System.currentTimeMillis()));
+            expirationDay.add(Calendar.DATE, days);
+        } else {
+            expirationDay = null;
+        }
 
         // wifi設定用インスタンス
         mWifiManager  = (WifiManager)context.getApplicationContext().getSystemService(WIFI_SERVICE);
@@ -59,7 +69,7 @@ public class WifiHelper {
         }
 
         // 接続処理
-        switch (encMethod) {
+        switch (kind) {
             case FREE:
                 freeConnect(config);
                 break;
@@ -77,10 +87,10 @@ public class WifiHelper {
         // wifiの有効期限を設定
         SharedPreferences pref = context.getSharedPreferences("wifiHelper", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
-        if(calendarExpire != null) {
+        if(expirationDay != null) {
 
             // 有効期限の日時とSSIDを保存
-            editor.putLong("expireDateTime", Util.Transform.calendarTodate(calendarExpire).getTime());
+            editor.putLong("expireDateTime", Util.Transform.calendarTodate(expirationDay).getTime());
             editor.putString("ssid", mSsid);
             editor.apply();
 
@@ -95,7 +105,7 @@ public class WifiHelper {
 
             // アラームをセットする
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendarExpire.getTimeInMillis(), pending);
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, expirationDay.getTimeInMillis(), pending);
         } else {
             editor.clear().apply();
         }
