@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "/Users/Masafumi_Ito/Library/Mobile Documents/com~apple~CloudDocs/_conol/02_projects/01_project/corona/WifiHelper-android/wifiHelperLib/build/intermediates/res/merged/debug/layout-v11/notification_template_big_media_narrow.xml",
+        "source": "/Users/Masafumi_Ito/.android/build-cache/5c4682e6babc95ef3feceea37fd0aa561a203f4e/output/res/layout-v11/notification_template_big_media_narrow.xml"
+    },
+    {
+        "merged": "/Users/Masafumi_Ito/Library/Mobile Documents/com~apple~CloudDocs/_conol/02_projects/01_project/corona/WifiHelper-android/wifiHelperLib/build/intermediates/res/merged/debug/layout-v11/notification_media_cancel_action.xml",
+        "source": "/Users/Masafumi_Ito/.android/build-cache/5c4682e6babc95ef3feceea37fd0aa561a203f4e/output/res/layout-v11/notification_media_cancel_action.xml"
+    },
+    {
+        "merged": "/Users/Masafumi_Ito/Library/Mobile Documents/com~apple~CloudDocs/_conol/02_projects/01_project/corona/WifiHelper-android/wifiHelperLib/build/intermediates/res/merged/debug/layout-v11/notification_template_big_media_narrow_custom.xml",
+        "source": "/Users/Masafumi_Ito/.android/build-cache/5c4682e6babc95ef3feceea37fd0aa561a203f4e/output/res/layout-v11/notification_template_big_media_narrow_custom.xml"
+    },
+    {
+        "merged": "/Users/Masafumi_Ito/Library/Mobile Documents/com~apple~CloudDocs/_conol/02_projects/01_project/corona/WifiHelper-android/wifiHelperLib/build/intermediates/res/merged/debug/layout-v11/notification_media_action.xml",
+        "source": "/Users/Masafumi_Ito/.android/build-cache/5c4682e6babc95ef3feceea37fd0aa561a203f4e/output/res/layout-v11/notification_media_action.xml"
+    },
+    {
+        "merged": "/Users/Masafumi_Ito/Library/Mobile Documents/com~apple~CloudDocs/_conol/02_projects/01_project/corona/WifiHelper-android/wifiHelperLib/build/intermediates/res/merged/debug/layout-v11/notification_template_big_media_custom.xml",
+        "source": "/Users/Masafumi_Ito/.android/build-cache/5c4682e6babc95ef3feceea37fd0aa561a203f4e/output/res/layout-v11/notification_template_big_media_custom.xml"
+    },
+    {
+        "merged": "/Users/Masafumi_Ito/Library/Mobile Documents/com~apple~CloudDocs/_conol/02_projects/01_project/corona/WifiHelper-android/wifiHelperLib/build/intermediates/res/merged/debug/layout-v11/notification_template_big_media.xml",
+        "source": "/Users/Masafumi_Ito/.android/build-cache/5c4682e6babc95ef3feceea37fd0aa561a203f4e/output/res/layout-v11/notification_template_big_media.xml"
+    }
+]

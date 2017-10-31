@@ -28,19 +28,17 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import org.json.JSONException;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import jp.co.conol.wifihelper_admin_lib.corona.Corona;
-import jp.co.conol.wifihelper_admin_lib.corona.CoronaException;
-import jp.co.conol.wifihelper_admin_lib.corona.NfcNotAvailableException;
-import jp.co.conol.wifihelper_admin_lib.wifi_helper.GetAvailableDevices;
-import jp.co.conol.wifihelper_admin_lib.wifi_helper.WifiHelper;
-import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
+import jp.co.conol.wifihelper_lib.cuona.Cuona;
+import jp.co.conol.wifihelper_lib.cuona.CuonaException;
+import jp.co.conol.wifihelper_lib.cuona.NfcNotAvailableException;
+import jp.co.conol.wifihelper_lib.wifi_helper.GetAvailableDevices;
+import jp.co.conol.wifihelper_lib.wifi_helper.WifiHelper;
+import jp.co.conol.wifihelper_lib.wifi_helper.model.Wifi;
 import jp.co.conol.wifihelper_android.MyUtil;
 import jp.co.conol.wifihelper_android.R;
 import jp.co.conol.wifihelper_android.receiver.WifiConnectionBroadcastReceiver;
@@ -54,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private Handler mScanDialogAutoCloseHandler = new Handler();
     private Handler mConnectingTimeoutHandler = new Handler();
     private WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
-    private Corona mCorona;
+    private Cuona mCuona;
     private boolean mConnectedAp = false;  // WifiでAPに接続成功したか否か
     private boolean mWifiStateChange = false;  // 本アプリからWifiをオンに切り替えたか否か
     private boolean mAvailableService = false;  // 読み込んだタグがWifiHelperに対応しているか否か
@@ -77,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         mConnectingProgressConstraintLayout = (ConstraintLayout) findViewById(R.id.connectingProgressConstraintLayout);
 
         try {
-            mCorona = new Corona(this);
+            mCuona = new Cuona(this);
         } catch (NfcNotAvailableException e) {
             Log.d("CoronaNfc", e.toString());
             finish();
@@ -109,9 +107,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                     } else {
 
                         // デバイスIDのリストを作成
-                        for(int i = 0; i < deviceIdList.size(); i++) {
-                            mDeviceIds.add(deviceIdList.get(i));
-                        }
+                        mDeviceIds.addAll(deviceIdList);
 
                         // デバイスIDと取得日時を保存
                         SharedPreferences.Editor editor = mPref.edit();
@@ -163,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         }
 
         // nfcがオフの場合はダイアログを表示
-        if(!mCorona.isEnable()) {
+        if(!mCuona.isEnable()) {
             new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.nfc_dialog))
                     .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
@@ -200,9 +196,8 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         String deviceId;
         String jsonString;
         try {
-            deviceId = mCorona.readDeviceId(intent);
-            jsonString = mCorona.readJson(intent);
-        } catch (CoronaException e) {
+            deviceId = mCuona.readDeviceId(intent);
+        } catch (CuonaException e) {
             Log.d("CoronaReader", e.toString());
             new AlertDialog.Builder(MainActivity.this)
                     .setMessage(getString(R.string.error_not_exist_in_devise_ids))
@@ -212,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         }
 
         // サーバーに登録されているWifiHelper利用可能なデバイスに、タッチされたNFCが含まれているか否か確認
-        if(mDeviceIds != null && deviceId != null && jsonString != null) {
+        if(mDeviceIds != null && deviceId != null) {
 
             // デバイスIDを小文字にする
             deviceId = deviceId.toLowerCase();
@@ -226,7 +221,8 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
             // 含まれていれば処理を進める
             else {
                 try {
-                    final Wifi wifi = WifiHelper.parseJsonToObj(jsonString);
+                    // Wifi設定情報を取得
+                    final Wifi wifi = WifiHelper.readWifiSetting(intent, mCuona);
 
                     // 接続期限日時の算出
                     Calendar expirationDay = Calendar.getInstance();
@@ -274,7 +270,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                     mAvailableService = true;
                 }
                 // 読み込んだnfcがWifiHelperに未対応の場合
-                catch (JSONException e) {
+                catch (CuonaException e) {
                     e.printStackTrace();
                     new AlertDialog.Builder(MainActivity.this)
                             .setMessage(getString(R.string.error_read_service_failed))
@@ -303,7 +299,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     @Override
     protected void onPause() {
         super.onPause();
-        mCorona.disableForegroundDispatch(MainActivity.this);
+        mCuona.disableForegroundDispatch(MainActivity.this);
 
         // レシーバーを解除
         unregisterReceiver(mWifiConnectionBroadcastReceiver);
@@ -321,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 );
         }
         // nfcがオフの場合はダイアログを表示
-        else if(!mCorona.isEnable()) {
+        else if(!mCuona.isEnable()) {
             new AlertDialog.Builder(this)
                     .setMessage(getString(R.string.nfc_dialog))
                     .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
@@ -336,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
             if (!isScanning) {
 
                 // nfc読み込み待機
-                mCorona.enableForegroundDispatch(MainActivity.this);
+                mCuona.enableForegroundDispatch(MainActivity.this);
                 isScanning = true;
                 openScanPage();
 
@@ -364,7 +360,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
     private void cancelScan() {
         // nfc読み込み待機を解除
-        mCorona.disableForegroundDispatch(MainActivity.this);
+        mCuona.disableForegroundDispatch(MainActivity.this);
         isScanning = false;
         closeScanPage();
     }

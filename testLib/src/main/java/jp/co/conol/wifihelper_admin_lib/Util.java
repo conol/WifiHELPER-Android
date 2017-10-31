@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib;
+package jp.co.conol.wifihelper_lib;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

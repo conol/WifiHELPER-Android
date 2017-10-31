@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib.wifi_connector.receiver;
+package jp.co.conol.wifihelper_lib.wifi_connector.receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,7 +9,7 @@ import android.widget.Toast;
 
 import java.util.Date;
 
-import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
+import jp.co.conol.wifihelper_lib.wifi_connector.WifiConnector;
 
 /**
  * Created by Masafumi_Ito on 2017/10/04.

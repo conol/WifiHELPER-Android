@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="jp.co.conol.wifihelper_admin_lib">
+    package="jp.co.conol.wifihelper_lib">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -17,7 +17,7 @@
         android:supportsRtl="true">
 
         <!-- wifiのオンオフを検知 -->
-        <receiver android:name=".wifi_helper.receiver.WifiStateWatcher">
+        <receiver android:name="jp.co.conol.wifihelper_lib.wifi_helper.receiver.WifiStateWatcher">
             <intent-filter>
                 <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
             </intent-filter>
@@ -25,7 +25,7 @@
 
         <!-- wifi有効期限切れのアラームを検知 -->
         <receiver
-            android:name=".wifi_helper.receiver.WifiExpiredBroadcastReceiver"
+            android:name="jp.co.conol.wifihelper_lib.wifi_helper.receiver.WifiExpiredBroadcastReceiver"
             android:process=":remote" />
 
     </application>

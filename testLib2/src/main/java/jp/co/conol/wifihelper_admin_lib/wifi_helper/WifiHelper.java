@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib.wifi_helper;
+package jp.co.conol.wifihelper_lib.wifi_helper;
 
 import android.content.Intent;
 import android.util.Log;
@@ -6,7 +6,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import jp.co.conol.wifihelper_admin_lib.wifi_helper.model.Wifi;
+import jp.co.conol.wifihelper_lib.wifi_helper.model.Wifi;
 
 
 /**

@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib.device_manager;
+package jp.co.conol.wifihelper_lib.device_manager;
 
 import android.os.AsyncTask;
 

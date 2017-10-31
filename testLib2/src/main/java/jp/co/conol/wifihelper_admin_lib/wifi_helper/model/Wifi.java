@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib.wifi_helper.model;
+package jp.co.conol.wifihelper_lib.wifi_helper.model;
 
 /**
  * Created by Masafumi_Ito on 2017/10/10.

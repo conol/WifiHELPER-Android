@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib.corona;
+package jp.co.conol.wifihelper_lib.corona;
 
 import android.Manifest;
 import android.app.Activity;
@@ -31,12 +31,12 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import jp.co.conol.wifihelper_admin_lib.Util;
-import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderException;
-import jp.co.conol.wifihelper_admin_lib.corona.corona_reader.CNFCReaderTag;
-import jp.co.conol.wifihelper_admin_lib.device_manager.GetLocation;
-import jp.co.conol.wifihelper_admin_lib.device_manager.SendLogAsyncTask;
-import jp.co.conol.wifihelper_admin_lib.wifi_connector.WifiConnector;
+import jp.co.conol.wifihelper_lib.Util;
+import jp.co.conol.wifihelper_lib.corona.corona_reader.CNFCReaderException;
+import jp.co.conol.wifihelper_lib.corona.corona_reader.CNFCReaderTag;
+import jp.co.conol.wifihelper_lib.device_manager.GetLocation;
+import jp.co.conol.wifihelper_lib.device_manager.SendLogAsyncTask;
+import jp.co.conol.wifihelper_lib.wifi_connector.WifiConnector;
 
 
 /**

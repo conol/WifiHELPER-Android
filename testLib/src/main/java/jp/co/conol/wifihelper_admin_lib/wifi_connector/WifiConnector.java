@@ -1,4 +1,4 @@
-package jp.co.conol.wifihelper_admin_lib.wifi_connector;
+package jp.co.conol.wifihelper_lib.wifi_connector;
 
 import android.Manifest;
 import android.app.Activity;
@@ -19,8 +19,8 @@ import android.util.Log;
 import java.util.Calendar;
 import java.util.List;
 
-import jp.co.conol.wifihelper_admin_lib.Util;
-import jp.co.conol.wifihelper_admin_lib.wifi_connector.receiver.WifiExpiredBroadcastReceiver;
+import jp.co.conol.wifihelper_lib.Util;
+import jp.co.conol.wifihelper_lib.wifi_connector.receiver.WifiExpiredBroadcastReceiver;
 
 import static android.content.Context.ALARM_SERVICE;
 import static android.content.Context.WIFI_SERVICE;
