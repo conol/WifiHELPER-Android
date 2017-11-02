@@ -33,6 +33,17 @@
                     android:scheme="vnd.android.nfc" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="ext"
+                    android:pathPrefix="/conol.jp:cuona"
+                    android:scheme="vnd.android.nfc" />
+            </intent-filter>
+
             <!--<intent-filter>-->
                 <!--<action android:name="android.nfc.action.TECH_DISCOVERED" />-->
             <!--</intent-filter>-->
@@ -40,7 +51,6 @@
                 <!--android:name="android.nfc.action.TECH_DISCOVERED"-->
                 <!--android:resource="@xml/nfc_tech" />-->
         </activity>
-        <activity android:name=".activity.WriteNfcActivity" />
         <activity
             android:name=".activity.AboutAppActivity"
             android:screenOrientation="portrait"/>

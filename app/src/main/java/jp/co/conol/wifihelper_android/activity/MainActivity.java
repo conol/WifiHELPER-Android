@@ -194,7 +194,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
         // nfc読み込み処理実行
         String deviceId;
-        String jsonString;
         try {
             deviceId = mCuona.readDeviceId(intent);
         } catch (CuonaException e) {
