@@ -171,16 +171,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                     .setNegativeButton(getString(R.string.cancel), null)
                     .show();
         }
-
-        // アプリ未起動でNFCタグが呼ばれた場合も読み込み
-        if (getIntent() != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
-            mOnSleepLaunch = true;
-
-            // 読み込み画面を表示し読み込み処理を開始
-            isScanning = true;
-            openScanBackground();
-            scanNfc(getIntent());
-        }
     }
 
     @Override
@@ -279,6 +269,16 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     @Override
     protected void onResume() {
         super.onResume();
+
+        // アプリ未起動でNFCタグが呼ばれた場合も読み込み
+        if (getIntent() != null && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
+            mOnSleepLaunch = true;
+
+            // 読み込み画面を表示し読み込み処理を開始
+            isScanning = true;
+            openScanBackground();
+            scanNfc(getIntent());
+        }
 
         // AP接続監視用のレシーバーを登録
         IntentFilter wifiConnectionIntentFilter = new IntentFilter();
