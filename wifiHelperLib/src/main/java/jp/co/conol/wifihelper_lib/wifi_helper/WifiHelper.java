@@ -274,32 +274,6 @@ public class WifiHelper {
         }
     }
 
-    public static void writeWifiSetting(Intent intent, Cuona cuona, Wifi wifi) throws CuonaException {
-        try {
-            String readString = cuona.readJsonNonLog(intent);
-
-            // 読み込んだjson
-            JSONObject readJson = new JSONObject(readString);
-
-            // 読み込んだjsonからWifiHelperの情報を削除
-            readJson.remove("wifi");
-
-            // 読み込んだjsonに新しい情報を書き込む
-            JSONObject writeJson = new JSONObject();
-            writeJson.put("id", "H7Pa7pQaVxxG");
-            writeJson.put("ssid", wifi.getSsid());
-            writeJson.put("pass", wifi.getPassword());
-            writeJson.put("kind", wifi.getKind());
-            if(wifi.getDays() != null) writeJson.put("days", wifi.getDays());
-            readJson.put("wifi", writeJson);
-            cuona.writeJson(intent, readJson.toString());
-
-        } catch (CuonaException | JSONException e) {
-            e.printStackTrace();
-            throw new CuonaException(e);
-        }
-    }
-
     private static Wifi parseJsonToObj(String targetJson) throws JSONException {
         JSONObject jsonObject = new JSONObject(targetJson);
         JSONObject wifi = jsonObject.getJSONObject("wifi");
