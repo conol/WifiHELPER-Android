@@ -151,7 +151,7 @@ public class Cuona {
             throw new CuonaException(e);
         }
         if(tag != null) {
-            return tag.getDeviceIdString();
+            return Util.Transform.deviceIdForServer(tag.getDeviceIdString());
         } else {
             return null;
         }

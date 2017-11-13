@@ -198,9 +198,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         // サーバーに登録されているWifiHelper利用可能なデバイスに、タッチされたNFCが含まれているか否か確認
         if(mDeviceIds != null && deviceId != null) {
 
-            // デバイスIDを小文字にする
-            deviceId = deviceId.toLowerCase();
-
             if (!mDeviceIds.contains(deviceId)) {
                 new AlertDialog.Builder(MainActivity.this)
                         .setMessage(getString(R.string.error_not_exist_in_devise_ids))
