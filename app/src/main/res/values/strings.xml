@@ -1,0 +1,42 @@
+<resources>
+
+    <!-- トップページ -->
+    <string name="app_name">Wi-Fi HELPER</string>
+    <string name="app_version">アプリバージョン：v1.0.0</string>
+    <string name="top_message">CUONAもしくは、\nNFCチップにタッチしてください</string>
+    <string name="start_reading">NFCリーダーを起動してタップする</string>
+    <string name="connecting_wifi">利用可能なWi-Fiへ接続を行っています</string>
+
+    <!-- nfc -->
+    <string name="nfc_scan_title">スキャンの準備ができました</string>
+    <string name="nfc_scan_message">CUONAへタッチしてください</string>
+
+    <!-- about -->
+    <string name="about_app">このアプリについて</string>
+    <string name="about_app_message">本アプリは【CUONA】シリーズでの利用が可能なWi-Fi専用アプリです。ホテルや空港など様々な場所でのご利用が可能になります。</string>
+    <string name="about_app_note">※ ご利用企業様に応じて若干見た目が異なる場合がございます。</string>
+    <string name="about_app_contact">CUONAについてのお問合わせはこちら</string>
+
+    <!-- ダイアログ -->
+    <string name="nfc_dialog">NFCがオフになっています\nNFCをオンに設定してください</string>
+    <string name="connecting_wifi_done">Wi-Fiに接続しました！\nインターネットをお楽しみください。</string>
+    <string name="grant_permission">本アプリを使用するには、位置情報へのアクセスを許可する必要があります。</string>
+    <string name="wifi_dialog">Wi-Fiがオフになっています\nWi-Fiをオンに設定してもよろしいですか？</string>
+    <string name="wifi_dialog_done">Wi-Fiをオンにしました\n再度タッチしてください</string>
+
+    <!-- エラー -->
+    <string name="error_network_disable">初回セットアップが必要です。\n一度インターネットに繋いで、アプリを再起動してください。</string>
+    <string name="error_fail_get_device_ids">一覧データの取得に失敗しました。\nアプリを再起動して再取得してください。</string>
+    <string name="connecting_wifi_failed">利用出来るWi-Fiに接続出来ませんでした。\n再度お試しください。</string>
+    <string name="connecting_wifi_failed_not_ap">利用出来るWi-Fiに接続出来ませんでした。\nアクセスポイントが見つかりません。</string>
+    <string name="load_devices_failed">デバイス一覧の取得に失敗しました</string>
+    <string name="error_read_service_failed">このNFCではWi-Fiサービスがご利用できません。</string>
+    <string name="error_not_exist_in_devise_ids">利用されたNFCは本アプリに対応していません。</string>
+    <string name="error_incorrect_touch_nfc">NFCが読み取れませんでした。正しくタッチできていないか、本アプリに対応していない可能性があります。</string>
+
+    <!-- 全体 -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="cancel_kana">キャンセル</string>
+
+</resources>
