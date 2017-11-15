@@ -32,6 +32,7 @@
     <string name="load_devices_failed">デバイス一覧の取得に失敗しました</string>
     <string name="error_read_service_failed">このNFCではWi-Fiサービスがご利用できません。</string>
     <string name="error_not_exist_in_devise_ids">利用されたNFCは本アプリに対応していません。</string>
+    <string name="error_incorrect_touch_nfc">NFCが読み取れませんでした。正しくタッチできていないか、本アプリに対応していない可能性があります。</string>
 
     <!-- 全体 -->
     <string name="ok">OK</string>

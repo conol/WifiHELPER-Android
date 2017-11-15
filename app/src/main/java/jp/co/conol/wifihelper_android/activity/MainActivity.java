@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         try {
             mCuona = new Cuona(this);
         } catch (NfcNotAvailableException e) {
-            Log.d("CoronaNfc", e.toString());
+            Log.d("CuonaNfc", e.toString());
             finish();
         }
 
@@ -187,11 +187,12 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         try {
             deviceId = mCuona.readDeviceId(intent);
         } catch (CuonaException e) {
-            Log.d("CoronaReader", e.toString());
+            Log.d("CuonaReader", e.toString());
             new AlertDialog.Builder(MainActivity.this)
-                    .setMessage(getString(R.string.error_not_exist_in_devise_ids))
+                    .setMessage(getString(R.string.error_incorrect_touch_nfc))
                     .setPositiveButton(getString(R.string.ok), null)
                     .show();
+            cancelScan();
             return;
         }
 
@@ -250,14 +251,9 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 catch (CuonaException e) {
                     e.printStackTrace();
                     new AlertDialog.Builder(MainActivity.this)
-                            .setMessage(getString(R.string.error_read_service_failed))
-                            .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    isScanning = false;
-                                    closeScanPage();
-                                }
-                            }).show();
+                            .setMessage(getString(R.string.error_incorrect_touch_nfc))
+                            .setPositiveButton(getString(R.string.ok), null).show();
+                    cancelScan();
                 }
             }
         }

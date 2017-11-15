@@ -124,7 +124,11 @@ public class Cuona {
     }
 
     public void disableForegroundDispatch(Activity activity) {
-        nfcAdapter.disableForegroundDispatch(activity);
+        try {
+            nfcAdapter.disableForegroundDispatch(activity);
+        } catch (IllegalStateException e) {
+            // Already disabled, ignore
+        }
     }
 
     public int readType(Intent intent) throws CuonaException {
@@ -235,7 +239,7 @@ public class Cuona {
                 e.printStackTrace();
             }
         }
-        if(msg == null) throw new CuonaException("Can not available WifiHelper!!");
+        if(msg == null) throw new CuonaException("Can not available");
 
         NdefRecord[] records = msg.getRecords();
         for (NdefRecord rec : records) {
