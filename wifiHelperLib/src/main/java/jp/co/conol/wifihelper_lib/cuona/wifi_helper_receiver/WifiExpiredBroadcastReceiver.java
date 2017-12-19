@@ -1,11 +1,12 @@
-package jp.co.conol.wifihelper_lib.wifi_helper.receiver;
+package jp.co.conol.wifihelper_lib.cuona.wifi_helper_receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.widget.Toast;
 
-import jp.co.conol.wifihelper_lib.wifi_helper.WifiHelper;
+import jp.co.conol.wifihelper_lib.cuona.WifiHelper;
 
 /**
  * Created by Masafumi_Ito on 2017/10/06.
@@ -17,7 +18,8 @@ public class WifiExpiredBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, Intent intent) {
 
         // ssidを取得
-        final String ssid = intent.getStringExtra("ssid");
+        SharedPreferences pref = context.getSharedPreferences("wifiHelper", Context.MODE_PRIVATE);
+        String ssid = pref.getString("ssid", null);
 
         // wifiを解除
         WifiHelper.deleteAccessPoint(context, ssid);
