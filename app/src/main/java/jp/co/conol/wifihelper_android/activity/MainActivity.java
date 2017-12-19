@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 }
             }).execute(WifiHelper.Task.GetAvailableDevices);
         }
-        else {
+        else if(!MyUtil.Network.isEnable(this) && mAvailableDeviceIdList.size() == 0) {
             new SimpleAlertDialog(MainActivity.this, getString(R.string.error_network_disable)).show();
         }
     }
