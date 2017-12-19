@@ -27,10 +27,10 @@ import jp.co.conol.wifihelper_android.custom.CuonaUtil;
 import jp.co.conol.wifihelper_android.custom.ProgressDialog;
 import jp.co.conol.wifihelper_android.custom.ScanCuonaDialog;
 import jp.co.conol.wifihelper_android.custom.SimpleAlertDialog;
-import jp.co.conol.wifihelper_lib.cuona.Cuona;
 import jp.co.conol.wifihelper_android.MyUtil;
 import jp.co.conol.wifihelper_android.R;
 import jp.co.conol.wifihelper_android.receiver.WifiConnectionBroadcastReceiver;
+import jp.co.conol.wifihelper_lib.cuona.Cuona;
 import jp.co.conol.wifihelper_lib.cuona.NFCNotAvailableException;
 import jp.co.conol.wifihelper_lib.cuona.WifiHelper;
 import jp.co.conol.wifihelper_lib.cuona.cuona_reader.CuonaReaderException;
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 }
             }).execute(WifiHelper.Task.GetAvailableDevices);
         }
-        else {
+        else if(!MyUtil.Network.isEnable(this) && mAvailableDeviceIdList.size() == 0) {
             new SimpleAlertDialog(MainActivity.this, getString(R.string.error_network_disable)).show();
         }
     }
