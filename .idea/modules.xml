@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/WifiHelper-android.iml" filepath="$PROJECT_DIR$/WifiHelper-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/wifiHelperLib-debug/wifiHelperLib-debug.iml" filepath="$PROJECT_DIR$/wifiHelperLib-debug/wifiHelperLib-debug.iml" />
+      <module fileurl="file://$PROJECT_DIR$/wifiHelperLib/wifiHelperLib.iml" filepath="$PROJECT_DIR$/wifiHelperLib/wifiHelperLib.iml" />
     </modules>
   </component>
 </project>
