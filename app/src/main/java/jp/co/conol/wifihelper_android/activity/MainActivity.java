@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private Cuona mCuona;
     private boolean isSucceededConnectingAp = false;  // WifiでAPに接続成功したか否か
     private boolean isWifiConnectingByApp = false;   // wifi接続か否か
-    private List<String> mAvailableDeviceIdList = new ArrayList<>();    // WifiHelperのサービスに登録されているデバイスのID一覧
     private final int PERMISSION_REQUEST_CODE = 1000;
 
     @Override
@@ -65,60 +64,11 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
         // CUONAスキャンダイアログのインスタンスを生成
         mScanCuonaDialog = new ScanCuonaDialog(MainActivity.this, mCuona, 60000, false);
 
-        // 本体に登録されているデバイスIDを取得
-        final Gson gson = new Gson();
-        mAvailableDeviceIdList = gson.fromJson(MyUtil.SharedPref.getString(this, "deviceIds"), new TypeToken<List<String>>(){}.getType());
-        if(mAvailableDeviceIdList == null) mAvailableDeviceIdList = new ArrayList<>();
-
         // Android6.0以上はACCESS_COARSE_LOCATIONの許可が必要
         CuonaUtil.checkAccessCoarseLocationPermission(this, PERMISSION_REQUEST_CODE);
 
         // nfcがオフの場合はダイアログを表示
         CuonaUtil.checkNfcSetting(this, mCuona);
-
-        // サーバーに登録されているデバイスIDを取得
-        if (MyUtil.Network.isEnable(this)) {
-
-            // 読み込みダイアログを表示
-            final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setMessage(getString(R.string.progress_dialog));
-            progressDialog.show();
-
-            new WifiHelper(new WifiHelper.AsyncCallback() {
-                @Override
-                public void onSuccess(Object object) {
-                    mAvailableDeviceIdList = (List<String>) object;
-
-                    // 読み込みダイアログを非表示
-                    progressDialog.dismiss();
-
-                    // 接続成功してもデバイスID一覧が無ければエラー
-                    if(mAvailableDeviceIdList == null || mAvailableDeviceIdList.size() == 0) {
-                        new SimpleAlertDialog(MainActivity.this, getString(R.string.error_fail_get_device_ids)).show();
-                    } else {
-
-                        // デバイスIDを保存
-                        MyUtil.SharedPref.saveString(MainActivity.this, "deviceIds", gson.toJson(mAvailableDeviceIdList));
-                    }
-                }
-
-                @Override
-                public void onFailure(Exception e) {
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-
-                            // 読み込みダイアログを非表示
-                            progressDialog.dismiss();
-
-                            new SimpleAlertDialog(MainActivity.this, getString(R.string.error_fail_get_device_ids)).show();
-                        }
-                    });
-                }
-            }).execute(WifiHelper.Task.GetAvailableDevices);
-        }
-        else if(!MyUtil.Network.isEnable(this) && mAvailableDeviceIdList.size() == 0) {
-            new SimpleAlertDialog(MainActivity.this, getString(R.string.error_network_disable)).show();
-        }
     }
 
     @Override
@@ -146,10 +96,8 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
             mScanCuonaDialog.dismiss();
 
             // nfc読み込み処理実行
-            String deviceId;
             Wifi wifi;
             try {
-                deviceId = mCuona.readDeviceId(intent);
                 wifi = WifiHelper.readWifiSetting(intent, mCuona);
             } catch (CuonaReaderException e) {
                 e.printStackTrace();
@@ -157,16 +105,8 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
                 return;
             }
 
-            // サーバーに登録されているWifiHelper利用可能なデバイスに、タッチされたNFCが含まれているか否か確認
-            if(mAvailableDeviceIdList != null && deviceId != null) {
-                if (!mAvailableDeviceIdList.contains(deviceId)) {
-                    new SimpleAlertDialog(MainActivity.this, getString(R.string.error_not_exist_in_devise_ids)).show();
-                }
-                // 含まれていればWifi接続を開始
-                else {
-                    connectWifi(wifi);
-                }
-            }
+            // Wifi接続の開始
+            connectWifi(wifi);
         }
     }
 
