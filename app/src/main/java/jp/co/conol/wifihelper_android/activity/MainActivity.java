@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
     private Handler mConnectingTimeoutHandler = new Handler();  // Wifi接続実行のタイムアウトハンドラー
     private WifiConnectionBroadcastReceiver mWifiConnectionBroadcastReceiver = new WifiConnectionBroadcastReceiver();
     private Cuona mCuona;
+    private Wifi mWifi;
     private boolean isSucceededConnectingAp = false;  // WifiでAPに接続成功したか否か
     private boolean isWifiConnectingByApp = false;   // wifi接続か否か
     private final int PERMISSION_REQUEST_CODE = 1000;
@@ -73,41 +74,41 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
 
     @Override
     protected void onNewIntent(final Intent intent) {
-        if(mScanCuonaDialog.isShowing()) {
-
-            // wifi設定かオフになっている場合は確認ダイアログを表示
-            if (!WifiHelper.isEnable(getApplicationContext())) {
-                new AlertDialog.Builder(this)
-                        .setMessage(getString(R.string.wifi_dialog))
-                        .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                WifiHelper.setEnable(MainActivity.this, true);
-                                new SimpleAlertDialog(MainActivity.this, getString(R.string.wifi_dialog_done)).show();
-                                if(!mScanCuonaDialog.isShowing()) mScanCuonaDialog.show();
-                            }
-                        })
-                        .setNegativeButton(getString(R.string.cancel), null)
-                        .show();
-                return;
-            }
-
-            // CUONAスキャンダイアログを非表示
-            mScanCuonaDialog.dismiss();
-
-            // nfc読み込み処理実行
-            Wifi wifi;
-            try {
-                wifi = WifiHelper.readWifiSetting(intent, mCuona);
-            } catch (CuonaReaderException e) {
-                e.printStackTrace();
-                new SimpleAlertDialog(MainActivity.this, getString(R.string.error_incorrect_touch_nfc)).show();
-                return;
-            }
-
-            // Wifi接続の開始
-            connectWifi(wifi);
+        if(!mScanCuonaDialog.isShowing()) {
+            return;
         }
+
+        // wifi設定かオフになっている場合は確認ダイアログを表示
+        if (!WifiHelper.isEnable(getApplicationContext())) {
+            new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.wifi_dialog))
+                    .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            WifiHelper.setEnable(MainActivity.this, true);
+                            new SimpleAlertDialog(MainActivity.this, getString(R.string.wifi_dialog_done)).show();
+                            if(!mScanCuonaDialog.isShowing()) mScanCuonaDialog.show();
+                        }
+                    })
+                    .setNegativeButton(getString(R.string.cancel), null)
+                    .show();
+            return;
+        }
+
+        // CUONAスキャンダイアログを非表示
+        mScanCuonaDialog.dismiss();
+
+        // nfc読み込み処理実行
+        try {
+            mWifi = WifiHelper.readWifiSetting(intent, mCuona);
+        } catch (CuonaReaderException e) {
+            e.printStackTrace();
+            new SimpleAlertDialog(MainActivity.this, getString(R.string.error_incorrect_touch_nfc)).show();
+            return;
+        }
+
+        // Wifi接続の開始
+        connectWifi(mWifi);
     }
 
     @Override
@@ -214,7 +215,11 @@ public class MainActivity extends AppCompatActivity implements WifiConnectionBro
             // 表示メッセージの作成
             String dialogMessage;
             if(isSucceededConnectingAp)
-                dialogMessage = getString(R.string.connecting_wifi_done);
+                if(mWifi.getKind() == WifiHelper.FREE) {
+                    dialogMessage = getString(R.string.connecting_free_wifi);
+                } else {
+                    dialogMessage = getString(R.string.connecting_wifi_done);
+                }
             else
                 dialogMessage = getString(R.string.connecting_wifi_failed);
 

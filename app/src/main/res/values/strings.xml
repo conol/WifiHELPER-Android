@@ -23,6 +23,7 @@
     <string name="bluetooth_dialog">本アプリを使用するには、Bluetoothをオンに設定する必要があります。\nBluetoothをオンにしてもよろしいですか？</string>
     <string name="grant_permission">本アプリを使用するには、位置情報へのアクセスを許可する必要があります。</string>
     <string name="connecting_wifi_done">Wi-Fiに接続しました！\nインターネットをお楽しみください。</string>
+    <string name="connecting_free_wifi">Wi-Fiに接続を行います。</string>
     <string name="wifi_dialog">Wi-Fiがオフになっています\nWi-Fiをオンに設定してもよろしいですか？</string>
     <string name="wifi_dialog_done">Wi-Fiをオンにしました\n再度タッチしてください</string>
 
